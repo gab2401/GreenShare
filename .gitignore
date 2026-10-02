@@ -1,0 +1,16 @@
+# Cartella delle dipendenze front-end (npm)[cite: 85]
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# Cartelle di compilazione back-end (Maven)[cite: 189]
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+
+# File di configurazione IDE (IntelliJ, WebStorm, VS Code)[cite: 189]
+.idea/
+*.iml
+.vscode/
+.DS_Store
