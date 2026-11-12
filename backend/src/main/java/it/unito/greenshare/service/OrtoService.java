@@ -1,9 +1,6 @@
 package it.unito.greenshare.service;
 
-import it.unito.greenshare.dto.DTOMapper;
-import it.unito.greenshare.dto.LottoDTO;
-import it.unito.greenshare.dto.OrtoDTO;
-import it.unito.greenshare.dto.PrenotazioneDTO;
+import it.unito.greenshare.dto.*;
 import it.unito.greenshare.model.*;
 import it.unito.greenshare.repository.*;
 import org.springframework.stereotype.Service;
@@ -21,7 +18,6 @@ public class OrtoService {
     private final PrenotazioneRepository prenotazioneRepository;
     private final UserRepository userRepository;
 
-    // Dependency Injection tramite costruttore
     public OrtoService(OrtoRepository ortoRepository,
                        LottoRepository lottoRepository,
                        PrenotazioneRepository prenotazioneRepository,
@@ -34,40 +30,43 @@ public class OrtoService {
 
     @Transactional(readOnly = true)
     public List<OrtoDTO> getAllOrti() {
-        return ortoRepository.findAll()
-                .stream()
-                .map(DTOMapper::toOrtoDTO)
-                .collect(Collectors.toList());
+        return ortoRepository.findAll().stream().map(DTOMapper::toOrtoDTO).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public List<LottoDTO> getLottiByOrto(Long ortoId) {
-        return lottoRepository.findByOrtoId(ortoId)
-                .stream()
-                .map(DTOMapper::toLottoDTO)
-                .collect(Collectors.toList());
+    public List<LottoDTO> getLottiByOrto(Long ortoId, String stato) {
+        List<Lotto> lotti = (stato != null && !stato.isBlank())
+                ? lottoRepository.findByOrtoIdAndStato(ortoId, stato)
+                : lottoRepository.findByOrtoId(ortoId);
+        return lotti.stream().map(DTOMapper::toLottoDTO).collect(Collectors.toList());
     }
 
-    // Metodo transazionale ACID: se fallisce qualcosa, fa rollback automatico
+    @Transactional(readOnly = true)
+    public List<PrenotazioneDTO> getPrenotazioni(Long userId) {
+        List<Prenotazione> list = (userId != null)
+                ? prenotazioneRepository.findByUserId(userId)
+                : prenotazioneRepository.findAll();
+        return list.stream().map(DTOMapper::toPrenotazioneDTO).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream().map(DTOMapper::toUserDTO).collect(Collectors.toList());
+    }
+
     @Transactional
     public PrenotazioneDTO prenotaLotto(Long userId, Long lottoId, LocalDate dataInizio, LocalDate dataFine) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Utente non trovato con id: " + userId));
-
+                .orElseThrow(() -> new IllegalArgumentException("Utente non trovato: " + userId));
         Lotto lotto = lottoRepository.findById(lottoId)
-                .orElseThrow(() -> new IllegalArgumentException("Lotto non trovato con id: " + lottoId));
+                .orElseThrow(() -> new IllegalArgumentException("Lotto non trovato: " + lottoId));
 
         if (!"LIBERO".equalsIgnoreCase(lotto.getStato())) {
-            throw new IllegalStateException("Impossibile prenotare: il lotto " + lotto.getCodice() + " non è libero.");
+            throw new IllegalStateException("Il lotto " + lotto.getCodice() + " non è libero.");
         }
 
-        // 1. Modifica lo stato dell'entità (Hibernate la rileva come "dirty" e la aggiorna sul DB)
         lotto.setStato("IN_ATTESA");
-
-        // 2. Crea il record di prenotazione
-        Prenotazione p = new Prenotazione(dataInizio, dataFine, "IN_ATTESA", user, lotto);
-        Prenotazione salvata = prenotazioneRepository.save(p);
-
+        Prenotazione salvata = prenotazioneRepository.save(new Prenotazione(dataInizio, dataFine, "IN_ATTESA", user, lotto));
         return DTOMapper.toPrenotazioneDTO(salvata);
     }
 
@@ -75,10 +74,16 @@ public class OrtoService {
     public PrenotazioneDTO approvaPrenotazione(Long prenotazioneId) {
         Prenotazione p = prenotazioneRepository.findById(prenotazioneId)
                 .orElseThrow(() -> new IllegalArgumentException("Prenotazione non trovata: " + prenotazioneId));
-
         p.setStato("APPROVATA");
         p.getLotto().setStato("OCCUPATO");
-
         return DTOMapper.toPrenotazioneDTO(p);
+    }
+
+    @Transactional
+    public void cancellaPrenotazione(Long prenotazioneId) {
+        Prenotazione p = prenotazioneRepository.findById(prenotazioneId)
+                .orElseThrow(() -> new IllegalArgumentException("Prenotazione non trovata: " + prenotazioneId));
+        p.getLotto().setStato("LIBERO");
+        prenotazioneRepository.delete(p);
     }
 }

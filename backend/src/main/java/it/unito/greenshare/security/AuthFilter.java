@@ -28,7 +28,8 @@ public class AuthFilter implements Filter {
         }
 
         // 2. Rotte pubbliche: consultazione orti e autenticazione non richiedono login
-        if (path.startsWith("/api/auth") || (path.startsWith("/api/orti") && "GET".equalsIgnoreCase(method))) {
+        if (path.startsWith("/api/auth") ||
+                ("GET".equalsIgnoreCase(method) && (path.startsWith("/api/orti") || path.startsWith("/api/attivita")))) {
             chain.doFilter(request, response);
             return;
         }

@@ -1,10 +1,6 @@
 package it.unito.greenshare.controller;
 
-import it.unito.greenshare.dto.LottoDTO;
-import it.unito.greenshare.dto.PrenotazioneDTO;
-import it.unito.greenshare.dto.OrtoDTO;
-import it.unito.greenshare.dto.PrenotazioneRequest;
-import it.unito.greenshare.model.Orto;
+import it.unito.greenshare.dto.*;
 import it.unito.greenshare.service.OrtoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,29 +19,33 @@ public class OrtoController {
         this.ortoService = ortoService;
     }
 
-    // 1. GET /api/orti - Lista di tutti gli orto
+    // ROUTE 1: GET /api/orti
     @GetMapping("/orti")
     public ResponseEntity<List<OrtoDTO>> getOrti() {
         return ResponseEntity.ok(ortoService.getAllOrti());
     }
 
-    // 2. GET /api/orti/{ortoId}/lotti - Lista lotti/cassoni appartenenti a un orto
+    // ROUTE 2: GET /api/orti/{ortoId}/lotti?stato=LIBERO (Usa sia @PathVariable sia @RequestParam!)
     @GetMapping("/orti/{ortoId}/lotti")
-    public ResponseEntity<List<LottoDTO>> getLottiByOrto(@PathVariable Long ortoId) {
-        return ResponseEntity.ok(ortoService.getLottiByOrto(ortoId));
+    public ResponseEntity<List<LottoDTO>> getLottiByOrto(
+            @PathVariable Long ortoId,
+            @RequestParam(required = false) String stato) {
+        return ResponseEntity.ok(ortoService.getLottiByOrto(ortoId, stato));
     }
 
-    // 3. POST /api/prenotazioni - Form 1: creazione di una richiesta di prenotazione
+    // ROUTE 3: GET /api/prenotazioni?userId=1 (Usa @RequestParam nella Query String)
+    @GetMapping("/prenotazioni")
+    public ResponseEntity<List<PrenotazioneDTO>> getPrenotazioni(
+            @RequestParam(required = false) Long userId) {
+        return ResponseEntity.ok(ortoService.getPrenotazioni(userId));
+    }
+
+    // ROUTE 4: POST /api/prenotazioni (Usa @RequestBody)
     @PostMapping("/prenotazioni")
     public ResponseEntity<?> prenotaLotto(@RequestBody PrenotazioneRequest req) {
         try {
-            PrenotazioneDTO nuovaPrenotazione = ortoService.prenotaLotto(
-                    req.getUserId(),
-                    req.getLottoId(),
-                    req.getDataInizio(),
-                    req.getDataFine()
-            );
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuovaPrenotazione);
+            PrenotazioneDTO dto = ortoService.prenotaLotto(req.getUserId(), req.getLottoId(), req.getDataInizio(), req.getDataFine());
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (IllegalArgumentException e) {
@@ -53,14 +53,30 @@ public class OrtoController {
         }
     }
 
-    // 4. PUT /api/prenotazioni/{id}/approva - Funzionalità dedicata al Gestore
+    // ROUTE 5: PUT /api/prenotazioni/{id}/approva (Solo Gestore)
     @PutMapping("/prenotazioni/{id}/approva")
     public ResponseEntity<?> approvaPrenotazione(@PathVariable Long id) {
         try {
-            PrenotazioneDTO approvata = ortoService.approvaPrenotazione(id);
-            return ResponseEntity.ok(approvata);
+            return ResponseEntity.ok(ortoService.approvaPrenotazione(id));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
+    }
+
+    // ROUTE 6: DELETE /api/prenotazioni/{id} (Rifiuta/Libera lotto)
+    @DeleteMapping("/prenotazioni/{id}")
+    public ResponseEntity<?> cancellaPrenotazione(@PathVariable Long id) {
+        try {
+            ortoService.cancellaPrenotazione(id);
+            return ResponseEntity.ok("Prenotazione cancellata e lotto liberato");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    // ROUTE 7: GET /api/utenti (Per controllo utenti nella dashboard Admin)
+    @GetMapping("/utenti")
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        return ResponseEntity.ok(ortoService.getAllUsers());
     }
 }

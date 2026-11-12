@@ -21,6 +21,20 @@ public class DTOMapper {
         );
     }
 
+    public static AttivitaDTO toAttivitaDTO(AttivitaRaccolto a) {
+        if (a == null) return null;
+        return new AttivitaDTO(
+                a.getId(),
+                a.getTipoColtura(),
+                a.getQuantitaKg(),
+                a.getDataRaccolto(),
+                a.getAmbiente(),
+                a.getFotoUrl(),
+                a.getUser() != null ? a.getUser().getNome() : null,
+                a.getLotto() != null ? a.getLotto().getCodice() : null
+        );
+    }
+
     public static PrenotazioneDTO toPrenotazioneDTO(Prenotazione p) {
         if (p == null) return null;
         return new PrenotazioneDTO(
