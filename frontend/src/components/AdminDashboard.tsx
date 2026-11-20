@@ -12,15 +12,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ orti, onDataUpda
     const [nuovoAttrezzoNome, setNuovoAttrezzoNome] = useState<string>('');
     const [ortoTargetId, setOrtoTargetId] = useState<number>(orti.length > 0 ? orti[0].id : 1);
     const [msg, setMsg] = useState<string | null>(null);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const caricaDatiAdmin = useCallback(() => {
         fetch('http://localhost:8080/api/prenotazioni', { credentials: 'include' })
-            .then((res) => res.json())
-            .then((data: PrenotazioneDTO[]) => setPrenotazioni(data));
+            .then((res) => {
+                if (!res.ok) throw new Error('Errore caricamento prenotazioni');
+                return res.json();
+            })
+            .then((data: PrenotazioneDTO[]) => setPrenotazioni(data))
+            .catch((err) => setErrorMsg(err.message));
 
         fetch('http://localhost:8080/api/utenti', { credentials: 'include' })
-            .then((res) => res.json())
-            .then((data: UserDTO[]) => setUtenti(data));
+            .then((res) => {
+                if (!res.ok) throw new Error('Errore caricamento utenti');
+                return res.json();
+            })
+            .then((data: UserDTO[]) => setUtenti(data))
+            .catch((err) => setErrorMsg(err.message));
     }, []);
 
     useEffect(() => {
@@ -28,36 +37,66 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ orti, onDataUpda
     }, [caricaDatiAdmin]);
 
     const handleApprova = async (id: number) => {
-        await fetch(`http://localhost:8080/api/prenotazioni/${id}/approva`, {
-            method: 'PUT',
-            credentials: 'include'
-        });
-        setMsg(`Prenotazione #${id} approvata! Il lotto ora è OCCUPATO.`);
-        caricaDatiAdmin();
-        onDataUpdated();
+        setMsg(null);
+        setErrorMsg(null);
+        try {
+            const res = await fetch(`http://localhost:8080/api/prenotazioni/${id}/approva`, {
+                method: 'PUT',
+                credentials: 'include'
+            });
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText || 'Errore durante l\'approvazione');
+            }
+            setMsg(`Prenotazione #${id} approvata! Il lotto ora è OCCUPATO.`);
+            caricaDatiAdmin();
+            onDataUpdated();
+        } catch (err: any) {
+            setErrorMsg(err.message || 'Errore di rete');
+        }
     };
 
     const handleRifiuta = async (id: number) => {
-        await fetch(`http://localhost:8080/api/prenotazioni/${id}`, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-        setMsg(`Prenotazione #${id} rifiutata/cancellata. Il lotto è tornato LIBERO.`);
-        caricaDatiAdmin();
-        onDataUpdated();
+        setMsg(null);
+        setErrorMsg(null);
+        try {
+            const res = await fetch(`http://localhost:8080/api/prenotazioni/${id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText || 'Errore durante la cancellazione');
+            }
+            setMsg(`Prenotazione #${id} rifiutata/cancellata. Il lotto è tornato LIBERO.`);
+            caricaDatiAdmin();
+            onDataUpdated();
+        } catch (err: any) {
+            setErrorMsg(err.message || 'Errore di rete');
+        }
     };
 
     const handleAggiungiAttrezzo = async (e: React.FormEvent) => {
         e.preventDefault();
-        await fetch(`http://localhost:8080/api/orti/${ortoTargetId}/attrezzi`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ nome: nuovoAttrezzoNome })
-        });
-        setMsg(`Materiale "${nuovoAttrezzoNome}" aggiunto con successo alla comunità!`);
-        setNuovoAttrezzoNome('');
-        onDataUpdated();
+        setMsg(null);
+        setErrorMsg(null);
+        try {
+            const res = await fetch(`http://localhost:8080/api/orti/${ortoTargetId}/attrezzi`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ nome: nuovoAttrezzoNome })
+            });
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText || 'Errore durante l\'aggiunta del materiale');
+            }
+            setMsg(`Materiale "${nuovoAttrezzoNome}" aggiunto con successo alla comunità!`);
+            setNuovoAttrezzoNome('');
+            onDataUpdated();
+        } catch (err: any) {
+            setErrorMsg(err.message || 'Errore di rete');
+        }
     };
 
     return (
@@ -70,6 +109,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ orti, onDataUpda
                     Approva o rifiuta le richieste di lotti, controlla gli utenti iscritti e aggiungi nuovi attrezzi o sacchi di terriccio.
                 </p>
             </div>
+
+            {errorMsg && (
+                <div style={{ backgroundColor: '#ffebee', color: '#c62828', padding: '0.8rem 1rem', borderRadius: '8px', fontWeight: 'bold', border: '1px solid #ef9a9a' }}>
+                    ⚠️ {errorMsg}
+                </div>
+            )}
 
             {msg && (
                 <div style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '0.8rem 1rem', borderRadius: '8px', fontWeight: 'bold' }}>
@@ -102,16 +147,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ orti, onDataUpda
                                 <td style={{ padding: '0.6rem' }}>{p.lottoCodice}</td>
                                 <td style={{ padding: '0.6rem' }}>{p.dataInizio} → {p.dataFine}</td>
                                 <td style={{ padding: '0.6rem' }}>
-                    <span style={{
-                        padding: '0.2rem 0.5rem',
-                        borderRadius: '10px',
-                        fontWeight: 'bold',
-                        fontSize: '0.75rem',
-                        backgroundColor: p.stato === 'APPROVATA' ? '#dcfce7' : '#fef3c7',
-                        color: p.stato === 'APPROVATA' ? '#166534' : '#b45309'
-                    }}>
-                      {p.stato}
-                    </span>
+                                    <span style={{
+                                        padding: '0.2rem 0.5rem',
+                                        borderRadius: '10px',
+                                        fontWeight: 'bold',
+                                        fontSize: '0.75rem',
+                                        backgroundColor: p.stato === 'APPROVATA' ? '#dcfce7' : '#fef3c7',
+                                        color: p.stato === 'APPROVATA' ? '#166534' : '#b45309'
+                                    }}>
+                                        {p.stato}
+                                    </span>
                                 </td>
                                 <td style={{ padding: '0.6rem', display: 'flex', gap: '0.5rem' }}>
                                     {p.stato === 'IN_ATTESA' && (

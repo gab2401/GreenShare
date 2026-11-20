@@ -56,6 +56,13 @@ public class OrtoService {
 
     @Transactional
     public PrenotazioneDTO prenotaLotto(Long userId, Long lottoId, LocalDate dataInizio, LocalDate dataFine) {
+        if (dataInizio == null || dataFine == null) {
+            throw new IllegalStateException("Le date di inizio e fine sono obbligatorie.");
+        }
+        if (dataFine.isBefore(dataInizio)) {
+            throw new IllegalStateException("La data di fine non può essere precedente alla data di inizio.");
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Utente non trovato: " + userId));
         Lotto lotto = lottoRepository.findById(lottoId)

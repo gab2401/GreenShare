@@ -30,13 +30,21 @@ public class AttrezziController {
         return ResponseEntity.ok(attrezziService.getAttrezziByOrto(ortoId, soloDisponibili));
     }
 
-    // ROUTE 9: POST /api/orti/{ortoId}/attrezzi (Permette al Gestore di aggiungere nuovi materiali/terriccio)
+    // ROUTE 9: POST /api/orti/{ortoId}/attrezzi (Solo Gestore)
     @PostMapping("/orti/{ortoId}/attrezzi")
-    public ResponseEntity<AttrezzoDTO> aggiungiAttrezzo(
+    public ResponseEntity<?> aggiungiAttrezzo(
             @PathVariable Long ortoId,
             @RequestBody Map<String, String> body) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(attrezziService.aggiungiAttrezzo(ortoId, body.get("nome")));
+        String nome = body.get("nome");
+        if (nome == null || nome.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Il nome del materiale è obbligatorio.");
+        }
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(attrezziService.aggiungiAttrezzo(ortoId, nome.trim()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
     // ROUTE 10: PUT /api/attrezzi/{id}/preleva
@@ -61,14 +69,14 @@ public class AttrezziController {
         }
     }
 
-    // ROUTE 12: GET /api/attivita?userId=1 (Recupera le piante/raccolti dell'utente con foto)
+    // ROUTE 12: GET /api/attivita?userId=1
     @GetMapping("/attivita")
     public ResponseEntity<List<AttivitaDTO>> getAttivita(
             @RequestParam(required = false) Long userId) {
         return ResponseEntity.ok(attrezziService.getAttivita(userId));
     }
 
-    // ROUTE 13: POST /api/attivita (Aggiunge pianta sul balcone o raccolto con foto)
+    // ROUTE 13: POST /api/attivita
     @PostMapping("/attivita")
     public ResponseEntity<?> registraAttivita(@RequestBody AttivitaRequest req) {
         try {

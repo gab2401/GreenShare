@@ -1,0 +1,2893 @@
+=== FILE: backend/src/main/resources/application.properties ===
+server.port=8080
+
+# Connessione PostgreSQL (sostituisci dbname, username e password con i tuoi locali)[cite: 216]
+spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
+spring.datasource.username=postgres
+spring.datasource.password=admin
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# Gestione Schema DDL tramite Hibernate: 'update' aggiorna le tabelle in automatico[cite: 216]
+spring.jpa.hibernate.ddl-auto=create
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+# Parametri Sessione e Cookie da slide del corso[cite: 234]
+server.servlet.session.cookie.name=GREENSHARE_SESSION_COOKIE
+server.servlet.session.cookie.http-only=true
+server.servlet.session.cookie.secure=false
+=== FILE: backend/src/main/java/it/unito/greenshare/dto/LottoDTO.java ===
+package it.unito.greenshare.dto;
+
+public class LottoDTO {
+    private Long id;
+    private String codice;
+    private Double dimensioneMq;
+    private String stato;
+    private Long ortoId;
+    private String ortoNome;
+
+    public LottoDTO() {}
+
+    public LottoDTO(Long id, String codice, Double dimensioneMq, String stato, Long ortoId, String ortoNome) {
+        this.id = id;
+        this.codice = codice;
+        this.dimensioneMq = dimensioneMq;
+        this.stato = stato;
+        this.ortoId = ortoId;
+        this.ortoNome = ortoNome;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getCodice() { return codice; }
+    public void setCodice(String codice) { this.codice = codice; }
+    public Double getDimensioneMq() { return dimensioneMq; }
+    public void setDimensioneMq(Double dimensioneMq) { this.dimensioneMq = dimensioneMq; }
+    public String getStato() { return stato; }
+    public void setStato(String stato) { this.stato = stato; }
+    public Long getOrtoId() { return ortoId; }
+    public void setOrtoId(Long ortoId) { this.ortoId = ortoId; }
+    public String getOrtoNome() { return ortoNome; }
+    public void setOrtoNome(String ortoNome) { this.ortoNome = ortoNome; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/dto/AttrezzoDTO.java ===
+package it.unito.greenshare.dto;
+
+public class AttrezzoDTO {
+    private Long id;
+    private String nome;
+    private boolean disponibile;
+    private Long ortoId;
+
+    public AttrezzoDTO() {}
+
+    public AttrezzoDTO(Long id, String nome, boolean disponibile, Long ortoId) {
+        this.id = id;
+        this.nome = nome;
+        this.disponibile = disponibile;
+        this.ortoId = ortoId;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+    public boolean isDisponibile() { return disponibile; }
+    public void setDisponibile(boolean disponibile) { this.disponibile = disponibile; }
+    public Long getOrtoId() { return ortoId; }
+    public void setOrtoId(Long ortoId) { this.ortoId = ortoId; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/dto/AttivitaDTO.java ===
+package it.unito.greenshare.dto;
+
+import java.time.LocalDate;
+
+public class AttivitaDTO {
+    private Long id;
+    private String tipoColtura;
+    private Double quantitaKg;
+    private LocalDate dataRaccolto;
+    private String ambiente;
+    private String fotoUrl;
+    private String username;
+    private String lottoCodice;
+
+    public AttivitaDTO() {}
+
+    public AttivitaDTO(Long id, String tipoColtura, Double quantitaKg, LocalDate dataRaccolto, String ambiente, String fotoUrl, String username, String lottoCodice) {
+        this.id = id;
+        this.tipoColtura = tipoColtura;
+        this.quantitaKg = quantitaKg;
+        this.dataRaccolto = dataRaccolto;
+        this.ambiente = ambiente;
+        this.fotoUrl = fotoUrl;
+        this.username = username;
+        this.lottoCodice = lottoCodice;
+    }
+
+    public Long getId() { return id; }
+    public String getTipoColtura() { return tipoColtura; }
+    public Double getQuantitaKg() { return quantitaKg; }
+    public LocalDate getDataRaccolto() { return dataRaccolto; }
+    public String getAmbiente() { return ambiente; }
+    public String getFotoUrl() { return fotoUrl; }
+    public String getUsername() { return username; }
+    public String getLottoCodice() { return lottoCodice; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/dto/DTOMapper.java ===
+package it.unito.greenshare.dto;
+
+import it.unito.greenshare.model.*;
+
+public class DTOMapper {
+
+    public static UserDTO toUserDTO(User user) {
+        if (user == null) return null;
+        return new UserDTO(user.getId(), user.getUsername(), user.getNome(), user.getRuolo());
+    }
+
+    public static LottoDTO toLottoDTO(Lotto lotto) {
+        if (lotto == null) return null;
+        return new LottoDTO(
+                lotto.getId(),
+                lotto.getCodice(),
+                lotto.getDimensioneMq(),
+                lotto.getStato(),
+                lotto.getOrto() != null ? lotto.getOrto().getId() : null,
+                lotto.getOrto() != null ? lotto.getOrto().getNome() : null
+        );
+    }
+
+    public static AttivitaDTO toAttivitaDTO(AttivitaRaccolto a) {
+        if (a == null) return null;
+        return new AttivitaDTO(
+                a.getId(),
+                a.getTipoColtura(),
+                a.getQuantitaKg(),
+                a.getDataRaccolto(),
+                a.getAmbiente(),
+                a.getFotoUrl(),
+                a.getUser() != null ? a.getUser().getNome() : null,
+                a.getLotto() != null ? a.getLotto().getCodice() : null
+        );
+    }
+
+    public static PrenotazioneDTO toPrenotazioneDTO(Prenotazione p) {
+        if (p == null) return null;
+        return new PrenotazioneDTO(
+                p.getId(),
+                p.getDataInizio(),
+                p.getDataFine(),
+                p.getStato(),
+                p.getUser() != null ? p.getUser().getId() : null,
+                p.getUser() != null ? p.getUser().getUsername() : null,
+                p.getLotto() != null ? p.getLotto().getId() : null,
+                p.getLotto() != null ? p.getLotto().getCodice() : null
+        );
+    }
+
+    public static OrtoDTO toOrtoDTO(Orto orto) {
+        if (orto == null) return null;
+        return new OrtoDTO(
+                orto.getId(),
+                orto.getNome(),
+                orto.getIndirizzo(),
+                orto.getDescrizione(),
+                orto.getMqTotali()
+        );
+    }
+
+    public static AttrezzoDTO toAttrezzoDTO(Attrezzo a) {
+        if (a == null) return null;
+        return new AttrezzoDTO(
+                a.getId(),
+                a.getNome(),
+                a.isDisponibile(),
+                a.getOrto() != null ? a.getOrto().getId() : null
+        );
+    }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/dto/AttivitaRequest.java ===
+package it.unito.greenshare.dto;
+
+public class AttivitaRequest {
+    private Long userId;
+    private Long lottoId;
+    private String tipoColtura;
+    private Double quantitaKg;
+    private String ambiente;
+    private String fotoUrl;
+
+    public AttivitaRequest() {}
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public Long getLottoId() { return lottoId; }
+    public void setLottoId(Long lottoId) { this.lottoId = lottoId; }
+    public String getTipoColtura() { return tipoColtura; }
+    public void setTipoColtura(String tipoColtura) { this.tipoColtura = tipoColtura; }
+    public Double getQuantitaKg() { return quantitaKg; }
+    public void setQuantitaKg(Double quantitaKg) { this.quantitaKg = quantitaKg; }
+    public String getAmbiente() { return ambiente; }
+    public void setAmbiente(String ambiente) { this.ambiente = ambiente; }
+    public String getFotoUrl() { return fotoUrl; }
+    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/dto/UserDTO.java ===
+package it.unito.greenshare.dto;
+
+public class UserDTO {
+    private Long id;
+    private String username;
+    private String nome;
+    private String ruolo;
+
+    public UserDTO() {}
+
+    public UserDTO(Long id, String username, String nome, String ruolo) {
+        this.id = id;
+        this.username = username;
+        this.nome = nome;
+        this.ruolo = ruolo;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+    public String getRuolo() { return ruolo; }
+    public void setRuolo(String ruolo) { this.ruolo = ruolo; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/dto/OrtoDTO.java ===
+package it.unito.greenshare.dto;
+
+public class OrtoDTO {
+    private Long id;
+    private String nome;
+    private String indirizzo;
+    private String descrizione;
+    private int mqTotali;
+
+    public OrtoDTO() {}
+
+    public OrtoDTO(Long id, String nome, String indirizzo, String descrizione, int mqTotali) {
+        this.id = id;
+        this.nome = nome;
+        this.indirizzo = indirizzo;
+        this.descrizione = descrizione;
+        this.mqTotali = mqTotali;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+    public String getIndirizzo() { return indirizzo; }
+    public void setIndirizzo(String indirizzo) { this.indirizzo = indirizzo; }
+    public String getDescrizione() { return descrizione; }
+    public void setDescrizione(String descrizione) { this.descrizione = descrizione; }
+    public int getMqTotali() { return mqTotali; }
+    public void setMqTotali(int mqTotali) { this.mqTotali = mqTotali; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/dto/PrenotazioneRequest.java ===
+package it.unito.greenshare.dto;
+
+import java.time.LocalDate;
+
+public class PrenotazioneRequest {
+    private Long userId;
+    private Long lottoId;
+    private LocalDate dataInizio;
+    private LocalDate dataFine;
+
+    public PrenotazioneRequest() {}
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+
+    public Long getLottoId() { return lottoId; }
+    public void setLottoId(Long lottoId) { this.lottoId = lottoId; }
+
+    public LocalDate getDataInizio() { return dataInizio; }
+    public void setDataInizio(LocalDate dataInizio) { this.dataInizio = dataInizio; }
+
+    public LocalDate getDataFine() { return dataFine; }
+    public void setDataFine(LocalDate dataFine) { this.dataFine = dataFine; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/dto/PrenotazioneDTO.java ===
+package it.unito.greenshare.dto;
+
+import java.time.LocalDate;
+
+public class PrenotazioneDTO {
+    private Long id;
+    private LocalDate dataInizio;
+    private LocalDate dataFine;
+    private String stato;
+    private Long userId;
+    private String username;
+    private Long lottoId;
+    private String lottoCodice;
+
+    public PrenotazioneDTO() {}
+
+    public PrenotazioneDTO(Long id, LocalDate dataInizio, LocalDate dataFine, String stato, Long userId, String username, Long lottoId, String lottoCodice) {
+        this.id = id;
+        this.dataInizio = dataInizio;
+        this.dataFine = dataFine;
+        this.stato = stato;
+        this.userId = userId;
+        this.username = username;
+        this.lottoId = lottoId;
+        this.lottoCodice = lottoCodice;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public LocalDate getDataInizio() { return dataInizio; }
+    public void setDataInizio(LocalDate dataInizio) { this.dataInizio = dataInizio; }
+    public LocalDate getDataFine() { return dataFine; }
+    public void setDataFine(LocalDate dataFine) { this.dataFine = dataFine; }
+    public String getStato() { return stato; }
+    public void setStato(String stato) { this.stato = stato; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public Long getLottoId() { return lottoId; }
+    public void setLottoId(Long lottoId) { this.lottoId = lottoId; }
+    public String getLottoCodice() { return lottoCodice; }
+    public void setLottoCodice(String lottoCodice) { this.lottoCodice = lottoCodice; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/GreenshareMain.java ===
+package it.unito.greenshare;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class GreenshareMain{
+
+    public static void main(String[] args) {
+        SpringApplication.run(GreenshareMain.class, args);
+    }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/repository/LottoRepository.java ===
+package it.unito.greenshare.repository;
+
+import it.unito.greenshare.model.Lotto;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface LottoRepository extends JpaRepository<Lotto, Long> {
+    // Query derivata per filtrare i lotti di un orto specifico in base allo stato (es. "LIBERO")
+    List<Lotto> findByOrtoIdAndStato(Long ortoId, String stato);
+    List<Lotto> findByOrtoId(Long ortoId);
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/repository/AttivitaRaccoltoRepository.java ===
+package it.unito.greenshare.repository;
+
+import it.unito.greenshare.model.AttivitaRaccolto;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface AttivitaRaccoltoRepository extends JpaRepository<AttivitaRaccolto, Long> {
+    List<AttivitaRaccolto> findByUserId(Long userId);
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/repository/AttrezzoRepository.java ===
+package it.unito.greenshare.repository;
+
+import it.unito.greenshare.model.Attrezzo;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface AttrezzoRepository extends JpaRepository<Attrezzo, Long> {
+    List<Attrezzo> findByOrtoIdAndDisponibileTrue(Long ortoId);
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/repository/PrenotazioneRepository.java ===
+package it.unito.greenshare.repository;
+
+import it.unito.greenshare.model.Prenotazione;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface PrenotazioneRepository extends JpaRepository<Prenotazione, Long> {
+    List<Prenotazione> findByUserId(Long userId);
+    List<Prenotazione> findByLottoId(Long lottoId);
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/repository/UserRepository.java ===
+package it.unito.greenshare.repository;
+
+import it.unito.greenshare.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    // Query Derivata: Spring genera automaticamente "SELECT * FROM utenti WHERE username = ?"
+    Optional<User> findByUsername(String username);
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/repository/OrtoRepository.java ===
+package it.unito.greenshare.repository;
+
+import it.unito.greenshare.model.Orto;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface OrtoRepository extends JpaRepository<Orto, Long> {
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/security/AuthFilter.java ===
+package it.unito.greenshare.security;
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+
+@Component
+public class AuthFilter implements Filter {
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse res = (HttpServletResponse) response;
+
+        String path = req.getRequestURI();
+        String method = req.getMethod();
+
+        // 1. Gestione Preflight CORS: le richieste OPTIONS del browser passano sempre
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // 2. Rotte pubbliche: consultazione orti e autenticazione non richiedono login
+        if (path.startsWith("/api/auth") ||
+                ("GET".equalsIgnoreCase(method) && (path.startsWith("/api/orti") || path.startsWith("/api/attivita")))) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // 3. Controllo della Sessione per tutte le altre rotte protette (POST, PUT, ecc.)
+        HttpSession session = req.getSession(false); // false: non crea una sessione nuova se non esiste
+        if (session != null && session.getAttribute("LOGGED_USER_ID") != null) {
+            // Utente autenticato: la richiesta prosegue verso il Controller
+            chain.doFilter(request, response);
+        } else {
+            // Utente non autenticato: blocco immediato con codice 401 Unauthorized
+            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            res.setContentType("application/json");
+            res.getWriter().write("{\"error\": \"Accesso non autorizzato. Effettuare prima il login.\"}");
+        }
+    }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/DataLoader.java ===
+package it.unito.greenshare;
+
+import it.unito.greenshare.model.*;
+import it.unito.greenshare.repository.*;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class DataLoader implements CommandLineRunner {
+
+    private final UserRepository userRepository;
+    private final OrtoRepository ortoRepository;
+    private final LottoRepository lottoRepository;
+    private final AttrezzoRepository attrezzoRepository;
+
+    public DataLoader(UserRepository userRepository,
+                      OrtoRepository ortoRepository,
+                      LottoRepository lottoRepository,
+                      AttrezzoRepository attrezzoRepository) {
+        this.userRepository = userRepository;
+        this.ortoRepository = ortoRepository;
+        this.lottoRepository = lottoRepository;
+        this.attrezzoRepository = attrezzoRepository;
+    }
+
+    @Override
+    public void run(String... args) {
+        // Popola il DB solo se vuoto
+        if (userRepository.count() == 0) {
+            // 1. Utenti di test richiesti dalle specifiche (1 Cittadino, 1 Gestore)
+            User cittadino = userRepository.save(new User("mario", "pass123", "Mario Rossi", "ROLE_CITTADINO"));
+            User gestore = userRepository.save(new User("admin", "admin123", "Laura Gestore", "ROLE_GESTORE"));
+
+            // 2. Orti di quartiere
+            Orto orto1 = ortoRepository.save(new Orto("Orti Condivisi San Salvario", "Via Madama Cristina, Torino", "Area verde urbana con appezzamenti e cassoni rialzati per orti da terrazzo", 500));
+            Orto orto2 = ortoRepository.save(new Orto("Comunità Verde Vanchiglia", "Lungo Dora Siena, Torino", "Orto comunitario per scambio risorse e sementi", 350));
+
+            // 3. Lotti / Cassoni
+            lottoRepository.save(new Lotto("L-01", 15.0, "LIBERO", orto1));
+            lottoRepository.save(new Lotto("L-02", 20.0, "OCCUPATO", orto1));
+            lottoRepository.save(new Lotto("B-01 (Cassone Balcone)", 3.0, "LIBERO", orto1));
+            lottoRepository.save(new Lotto("V-01", 12.0, "LIBERO", orto2));
+
+            // 4. Attrezzi e materiali di scambio
+            attrezzoRepository.save(new Attrezzo("Vanga ergonomica", true, orto1));
+            attrezzoRepository.save(new Attrezzo("Sacco Terriccio Universale 50L", true, orto1));
+            attrezzoRepository.save(new Attrezzo("Cesoie per potatura", false, orto1));
+            attrezzoRepository.save(new Attrezzo("Set Palette e Vasi Balcone", true, orto2));
+
+            System.out.println(">>> DataLoader completato: database inizializzato con successo! <<<");
+        }
+    }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/controller/AttrezziController.java ===
+package it.unito.greenshare.controller;
+
+import it.unito.greenshare.dto.AttivitaDTO;
+import it.unito.greenshare.dto.AttivitaRequest;
+import it.unito.greenshare.dto.AttrezzoDTO;
+import it.unito.greenshare.service.AttrezziService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+public class AttrezziController {
+
+    private final AttrezziService attrezziService;
+
+    public AttrezziController(AttrezziService attrezziService) {
+        this.attrezziService = attrezziService;
+    }
+
+    // ROUTE 8: GET /api/orti/{ortoId}/attrezzi?soloDisponibili=true
+    @GetMapping("/orti/{ortoId}/attrezzi")
+    public ResponseEntity<List<AttrezzoDTO>> getAttrezzi(
+            @PathVariable Long ortoId,
+            @RequestParam(required = false) Boolean soloDisponibili) {
+        return ResponseEntity.ok(attrezziService.getAttrezziByOrto(ortoId, soloDisponibili));
+    }
+
+    // ROUTE 9: POST /api/orti/{ortoId}/attrezzi (Permette al Gestore di aggiungere nuovi materiali/terriccio)
+    @PostMapping("/orti/{ortoId}/attrezzi")
+    public ResponseEntity<AttrezzoDTO> aggiungiAttrezzo(
+            @PathVariable Long ortoId,
+            @RequestBody Map<String, String> body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(attrezziService.aggiungiAttrezzo(ortoId, body.get("nome")));
+    }
+
+    // ROUTE 10: PUT /api/attrezzi/{id}/preleva
+    @PutMapping("/attrezzi/{id}/preleva")
+    public ResponseEntity<?> prelevaAttrezzo(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(attrezziService.prelevaAttrezzo(id));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    // ROUTE 11: PUT /api/attrezzi/{id}/restituisci
+    @PutMapping("/attrezzi/{id}/restituisci")
+    public ResponseEntity<?> restituisciAttrezzo(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(attrezziService.restituisciAttrezzo(id));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    // ROUTE 12: GET /api/attivita?userId=1 (Recupera le piante/raccolti dell'utente con foto)
+    @GetMapping("/attivita")
+    public ResponseEntity<List<AttivitaDTO>> getAttivita(
+            @RequestParam(required = false) Long userId) {
+        return ResponseEntity.ok(attrezziService.getAttivita(userId));
+    }
+
+    // ROUTE 13: POST /api/attivita (Aggiunge pianta sul balcone o raccolto con foto)
+    @PostMapping("/attivita")
+    public ResponseEntity<?> registraAttivita(@RequestBody AttivitaRequest req) {
+        try {
+            AttivitaDTO dto = attrezziService.registraAttivita(
+                    req.getUserId(),
+                    req.getLottoId(),
+                    req.getTipoColtura(),
+                    req.getQuantitaKg(),
+                    req.getAmbiente(),
+                    req.getFotoUrl()
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/controller/AuthController.java ===
+package it.unito.greenshare.controller;
+
+import it.unito.greenshare.dto.DTOMapper;
+import it.unito.greenshare.model.User;
+import it.unito.greenshare.repository.UserRepository;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+public class AuthController {
+
+    private final UserRepository userRepository;
+
+    public AuthController(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    // 9. POST /api/auth/login - Autenticazione con salvataggio utente in sessione
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials, HttpSession session) {
+        String username = credentials.get("username");
+        String password = credentials.get("password");
+
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isPresent() && userOpt.get().getPassword().equals(password)) {
+            User user = userOpt.get();
+            // Salva l'id utente nella sessione HTTP gestita da Tomcat
+            session.setAttribute("LOGGED_USER_ID", user.getId());
+            session.setAttribute("LOGGED_USER_ROLE", user.getRuolo());
+            return ResponseEntity.ok(DTOMapper.toUserDTO(user));
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenziali non valide");
+    }
+
+    // 10. GET /api/auth/me - Verifica se esiste una sessione attiva
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(HttpSession session) {
+        Long userId = (Long) session.getAttribute("LOGGED_USER_ID");
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Nessuna sessione attiva");
+        }
+        return userRepository.findById(userId)
+                .map(u -> ResponseEntity.ok(DTOMapper.toUserDTO(u)))
+                .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    }
+
+    // 11. POST /api/auth/logout - Invalida la sessione attiva
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpSession session) {
+        session.invalidate();
+        return ResponseEntity.ok("Logout effettuato con successo");
+    }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/controller/OrtoController.java ===
+package it.unito.greenshare.controller;
+
+import it.unito.greenshare.dto.*;
+import it.unito.greenshare.service.OrtoService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+public class OrtoController {
+
+    private final OrtoService ortoService;
+
+    public OrtoController(OrtoService ortoService) {
+        this.ortoService = ortoService;
+    }
+
+    // ROUTE 1: GET /api/orti
+    @GetMapping("/orti")
+    public ResponseEntity<List<OrtoDTO>> getOrti() {
+        return ResponseEntity.ok(ortoService.getAllOrti());
+    }
+
+    // ROUTE 2: GET /api/orti/{ortoId}/lotti?stato=LIBERO (Usa sia @PathVariable sia @RequestParam!)
+    @GetMapping("/orti/{ortoId}/lotti")
+    public ResponseEntity<List<LottoDTO>> getLottiByOrto(
+            @PathVariable Long ortoId,
+            @RequestParam(required = false) String stato) {
+        return ResponseEntity.ok(ortoService.getLottiByOrto(ortoId, stato));
+    }
+
+    // ROUTE 3: GET /api/prenotazioni?userId=1 (Usa @RequestParam nella Query String)
+    @GetMapping("/prenotazioni")
+    public ResponseEntity<List<PrenotazioneDTO>> getPrenotazioni(
+            @RequestParam(required = false) Long userId) {
+        return ResponseEntity.ok(ortoService.getPrenotazioni(userId));
+    }
+
+    // ROUTE 4: POST /api/prenotazioni (Usa @RequestBody)
+    @PostMapping("/prenotazioni")
+    public ResponseEntity<?> prenotaLotto(@RequestBody PrenotazioneRequest req) {
+        try {
+            PrenotazioneDTO dto = ortoService.prenotaLotto(req.getUserId(), req.getLottoId(), req.getDataInizio(), req.getDataFine());
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    // ROUTE 5: PUT /api/prenotazioni/{id}/approva (Solo Gestore)
+    @PutMapping("/prenotazioni/{id}/approva")
+    public ResponseEntity<?> approvaPrenotazione(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(ortoService.approvaPrenotazione(id));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    // ROUTE 6: DELETE /api/prenotazioni/{id} (Rifiuta/Libera lotto)
+    @DeleteMapping("/prenotazioni/{id}")
+    public ResponseEntity<?> cancellaPrenotazione(@PathVariable Long id) {
+        try {
+            ortoService.cancellaPrenotazione(id);
+            return ResponseEntity.ok("Prenotazione cancellata e lotto liberato");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    // ROUTE 7: GET /api/utenti (Per controllo utenti nella dashboard Admin)
+    @GetMapping("/utenti")
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        return ResponseEntity.ok(ortoService.getAllUsers());
+    }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/model/Attrezzo.java ===
+package it.unito.greenshare.model;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "attrezzi")
+public class Attrezzo {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String nome; // es. "Vanga", "Annaffiatoio", "Forbici da pota"
+
+    @Column(nullable = false)
+    private boolean disponibile;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "orto_id", nullable = false)
+    private Orto orto;
+
+    public Attrezzo() {}
+
+    public Attrezzo(String nome, boolean disponibile, Orto orto) {
+        this.nome = nome;
+        this.disponibile = disponibile;
+        this.orto = orto;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+
+    public boolean isDisponibile() { return disponibile; }
+    public void setDisponibile(boolean disponibile) { this.disponibile = disponibile; }
+
+    public Orto getOrto() { return orto; }
+    public void setOrto(Orto orto) { this.orto = orto; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/model/Orto.java ===
+package it.unito.greenshare.model;
+
+import java.util.List;
+import java.util.ArrayList;
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "orti")
+public class Orto {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String nome;
+
+    @Column(nullable = false)
+    private String indirizzo;
+
+    @OneToMany(mappedBy = "orto", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Lotto> lotti = new ArrayList<>();
+
+    public List<Lotto> getLotti() { return lotti; }
+    public void setLotti(List<Lotto> lotti) { this.lotti = lotti; }
+
+    private String descrizione;
+
+    private int mqTotali;
+
+    public Orto() {}
+
+    public Orto(String nome, String indirizzo, String descrizione, int mqTotali) {
+        this.nome = nome;
+        this.indirizzo = indirizzo;
+        this.descrizione = descrizione;
+        this.mqTotali = mqTotali;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+    public String getIndirizzo() { return indirizzo; }
+    public void setIndirizzo(String indirizzo) { this.indirizzo = indirizzo; }
+    public String getDescrizione() { return descrizione; }
+    public void setDescrizione(String descrizione) { this.descrizione = descrizione; }
+    public int getMqTotali() { return mqTotali; }
+    public void setMqTotali(int mqTotali) { this.mqTotali = mqTotali; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/model/AttivitaRaccolto.java ===
+package it.unito.greenshare.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "attivita_raccolto")
+public class AttivitaRaccolto {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String tipoColtura; // es. "Pomodori Ciliegino", "Pianta di Basilico"
+
+    @Column(nullable = false)
+    private Double quantitaKg;
+
+    @Column(nullable = false)
+    private LocalDate dataRaccolto;
+
+    @Column(nullable = true)
+    private String ambiente; // "BALCONE_CASA" oppure "ORTO_CONDIVISO"
+
+    @Column(columnDefinition = "TEXT")
+    private String fotoUrl; // Accetta sia link web sia foto caricate dal PC (Base64)!
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lotto_id", nullable = false)
+    private Lotto lotto;
+
+    public AttivitaRaccolto() {}
+
+    public AttivitaRaccolto(String tipoColtura, Double quantitaKg, LocalDate dataRaccolto, String ambiente, String fotoUrl, User user, Lotto lotto) {
+        this.tipoColtura = tipoColtura;
+        this.quantitaKg = quantitaKg;
+        this.dataRaccolto = dataRaccolto;
+        this.ambiente = ambiente;
+        this.fotoUrl = fotoUrl;
+        this.user = user;
+        this.lotto = lotto;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getTipoColtura() { return tipoColtura; }
+    public void setTipoColtura(String tipoColtura) { this.tipoColtura = tipoColtura; }
+    public Double getQuantitaKg() { return quantitaKg; }
+    public void setQuantitaKg(Double quantitaKg) { this.quantitaKg = quantitaKg; }
+    public LocalDate getDataRaccolto() { return dataRaccolto; }
+    public void setDataRaccolto(LocalDate dataRaccolto) { this.dataRaccolto = dataRaccolto; }
+    public String getAmbiente() { return ambiente; }
+    public void setAmbiente(String ambiente) { this.ambiente = ambiente; }
+    public String getFotoUrl() { return fotoUrl; }
+    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public Lotto getLotto() { return lotto; }
+    public void setLotto(Lotto lotto) { this.lotto = lotto; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/model/User.java ===
+package it.unito.greenshare.model;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "utenti")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String username;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
+    private String nome;
+
+    @Column(nullable = false)
+    private String ruolo; // ROLE_CITTADINO oppure ROLE_GESTORE
+
+    // Costruttore di default obbligatorio per JPA[cite: 217]
+    public User() {}
+
+    public User(String username, String password, String nome, String ruolo) {
+        this.username = username;
+        this.password = password;
+        this.nome = nome;
+        this.ruolo = ruolo;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+    public String getRuolo() { return ruolo; }
+    public void setRuolo(String ruolo) { this.ruolo = ruolo; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/model/Lotto.java ===
+package it.unito.greenshare.model;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "lotti")
+// Definizione della classe Lotto come entità JPA
+public class Lotto {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String codice; // es: "L-01", "L-02"
+
+    @Column(nullable = false)
+    private Double dimensioneMq;
+
+    @Column(nullable = false)
+    private String stato; // es: "LIBERO", "OCCUPATO", "IN_MANUTENZIONE"
+
+    // Relazione Molti-a-1: molti Lotti appartengono a un Orto.
+    // È il lato proprietario che definisce la Foreign Key (orto_id)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "orto_id", nullable = false)
+    private Orto orto;
+
+    // Costruttore di default obbligatorio per JPA
+    public Lotto() {
+    }
+
+    public Lotto(String codice, Double dimensioneMq, String stato, Orto orto) {
+        this.codice = codice;
+        this.dimensioneMq = dimensioneMq;
+        this.stato = stato;
+        this.orto = orto;
+    }
+
+    // Getter e Setter
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getCodice() {
+        return codice;
+    }
+
+    public void setCodice(String codice) {
+        this.codice = codice;
+    }
+
+    public Double getDimensioneMq() {
+        return dimensioneMq;
+    }
+
+    public void setDimensioneMq(Double dimensioneMq) {
+        this.dimensioneMq = dimensioneMq;
+    }
+
+    public String getStato() {
+        return stato;
+    }
+
+    public void setStato(String stato) {
+        this.stato = stato;
+    }
+
+    public Orto getOrto() {
+        return orto;
+    }
+
+    public void setOrto(Orto orto) {
+        this.orto = orto;
+    }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/model/Prenotazione.java ===
+package it.unito.greenshare.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "prenotazioni")
+public class Prenotazione {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private LocalDate dataInizio;
+
+    @Column(nullable = false)
+    private LocalDate dataFine;
+
+    @Column(nullable = false)
+    private String stato; // "IN_ATTESA", "APPROVATA", "RIFIUTATA"
+
+    // Relazione: molte prenotazioni appartengono a un singolo utente
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    // Relazione: molte prenotazioni possono riferirsi a un singolo lotto (in periodi diversi)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lotto_id", nullable = false)
+    private Lotto lotto;
+
+    public Prenotazione() {}
+
+    public Prenotazione(LocalDate dataInizio, LocalDate dataFine, String stato, User user, Lotto lotto) {
+        this.dataInizio = dataInizio;
+        this.dataFine = dataFine;
+        this.stato = stato;
+        this.user = user;
+        this.lotto = lotto;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public LocalDate getDataInizio() { return dataInizio; }
+    public void setDataInizio(LocalDate dataInizio) { this.dataInizio = dataInizio; }
+
+    public LocalDate getDataFine() { return dataFine; }
+    public void setDataFine(LocalDate dataFine) { this.dataFine = dataFine; }
+
+    public String getStato() { return stato; }
+    public void setStato(String stato) { this.stato = stato; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public Lotto getLotto() { return lotto; }
+    public void setLotto(Lotto lotto) { this.lotto = lotto; }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/service/OrtoService.java ===
+package it.unito.greenshare.service;
+
+import it.unito.greenshare.dto.*;
+import it.unito.greenshare.model.*;
+import it.unito.greenshare.repository.*;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class OrtoService {
+
+    private final OrtoRepository ortoRepository;
+    private final LottoRepository lottoRepository;
+    private final PrenotazioneRepository prenotazioneRepository;
+    private final UserRepository userRepository;
+
+    public OrtoService(OrtoRepository ortoRepository,
+                       LottoRepository lottoRepository,
+                       PrenotazioneRepository prenotazioneRepository,
+                       UserRepository userRepository) {
+        this.ortoRepository = ortoRepository;
+        this.lottoRepository = lottoRepository;
+        this.prenotazioneRepository = prenotazioneRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrtoDTO> getAllOrti() {
+        return ortoRepository.findAll().stream().map(DTOMapper::toOrtoDTO).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<LottoDTO> getLottiByOrto(Long ortoId, String stato) {
+        List<Lotto> lotti = (stato != null && !stato.isBlank())
+                ? lottoRepository.findByOrtoIdAndStato(ortoId, stato)
+                : lottoRepository.findByOrtoId(ortoId);
+        return lotti.stream().map(DTOMapper::toLottoDTO).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<PrenotazioneDTO> getPrenotazioni(Long userId) {
+        List<Prenotazione> list = (userId != null)
+                ? prenotazioneRepository.findByUserId(userId)
+                : prenotazioneRepository.findAll();
+        return list.stream().map(DTOMapper::toPrenotazioneDTO).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream().map(DTOMapper::toUserDTO).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public PrenotazioneDTO prenotaLotto(Long userId, Long lottoId, LocalDate dataInizio, LocalDate dataFine) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utente non trovato: " + userId));
+        Lotto lotto = lottoRepository.findById(lottoId)
+                .orElseThrow(() -> new IllegalArgumentException("Lotto non trovato: " + lottoId));
+
+        if (!"LIBERO".equalsIgnoreCase(lotto.getStato())) {
+            throw new IllegalStateException("Il lotto " + lotto.getCodice() + " non è libero.");
+        }
+
+        lotto.setStato("IN_ATTESA");
+        Prenotazione salvata = prenotazioneRepository.save(new Prenotazione(dataInizio, dataFine, "IN_ATTESA", user, lotto));
+        return DTOMapper.toPrenotazioneDTO(salvata);
+    }
+
+    @Transactional
+    public PrenotazioneDTO approvaPrenotazione(Long prenotazioneId) {
+        Prenotazione p = prenotazioneRepository.findById(prenotazioneId)
+                .orElseThrow(() -> new IllegalArgumentException("Prenotazione non trovata: " + prenotazioneId));
+        p.setStato("APPROVATA");
+        p.getLotto().setStato("OCCUPATO");
+        return DTOMapper.toPrenotazioneDTO(p);
+    }
+
+    @Transactional
+    public void cancellaPrenotazione(Long prenotazioneId) {
+        Prenotazione p = prenotazioneRepository.findById(prenotazioneId)
+                .orElseThrow(() -> new IllegalArgumentException("Prenotazione non trovata: " + prenotazioneId));
+        p.getLotto().setStato("LIBERO");
+        prenotazioneRepository.delete(p);
+    }
+}
+=== FILE: backend/src/main/java/it/unito/greenshare/service/AttrezziService.java ===
+package it.unito.greenshare.service;
+
+import it.unito.greenshare.dto.AttivitaDTO;
+import it.unito.greenshare.dto.AttrezzoDTO;
+import it.unito.greenshare.dto.DTOMapper;
+import it.unito.greenshare.model.*;
+import it.unito.greenshare.repository.*;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class AttrezziService {
+
+    private final AttrezzoRepository attrezzoRepository;
+    private final AttivitaRaccoltoRepository attivitaRaccoltoRepository;
+    private final UserRepository userRepository;
+    private final LottoRepository lottoRepository;
+    private final OrtoRepository ortoRepository;
+
+    public AttrezziService(AttrezzoRepository attrezzoRepository,
+                           AttivitaRaccoltoRepository attivitaRaccoltoRepository,
+                           UserRepository userRepository,
+                           LottoRepository lottoRepository,
+                           OrtoRepository ortoRepository) {
+        this.attrezzoRepository = attrezzoRepository;
+        this.attivitaRaccoltoRepository = attivitaRaccoltoRepository;
+        this.userRepository = userRepository;
+        this.lottoRepository = lottoRepository;
+        this.ortoRepository = ortoRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public List<AttrezzoDTO> getAttrezziByOrto(Long ortoId, Boolean soloDisponibili) {
+        List<Attrezzo> list = (Boolean.TRUE.equals(soloDisponibili))
+                ? attrezzoRepository.findByOrtoIdAndDisponibileTrue(ortoId)
+                : attrezzoRepository.findAll().stream().filter(a -> a.getOrto().getId().equals(ortoId)).toList();
+        return list.stream().map(DTOMapper::toAttrezzoDTO).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public AttrezzoDTO aggiungiAttrezzo(Long ortoId, String nome) {
+        Orto orto = ortoRepository.findById(ortoId)
+                .orElseThrow(() -> new IllegalArgumentException("Orto non trovato"));
+        Attrezzo nuovo = attrezzoRepository.save(new Attrezzo(nome, true, orto));
+        return DTOMapper.toAttrezzoDTO(nuovo);
+    }
+
+    @Transactional
+    public AttrezzoDTO prelevaAttrezzo(Long attrezzoId) {
+        Attrezzo attrezzo = attrezzoRepository.findById(attrezzoId)
+                .orElseThrow(() -> new IllegalArgumentException("Attrezzo non trovato: " + attrezzoId));
+        if (!attrezzo.isDisponibile()) {
+            throw new IllegalStateException("L'attrezzo selezionato è già in prestito.");
+        }
+        attrezzo.setDisponibile(false);
+        return DTOMapper.toAttrezzoDTO(attrezzo);
+    }
+
+    @Transactional
+    public AttrezzoDTO restituisciAttrezzo(Long attrezzoId) {
+        Attrezzo attrezzo = attrezzoRepository.findById(attrezzoId)
+                .orElseThrow(() -> new IllegalArgumentException("Attrezzo non trovato: " + attrezzoId));
+        attrezzo.setDisponibile(true);
+        return DTOMapper.toAttrezzoDTO(attrezzo);
+    }
+
+    @Transactional
+    public AttivitaDTO registraAttivita(Long userId, Long lottoId, String tipoColtura, Double quantitaKg, String ambiente, String fotoUrl) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utente non trovato"));
+        Lotto lotto = lottoRepository.findById(lottoId)
+                .orElseThrow(() -> new IllegalArgumentException("Lotto non trovato"));
+
+        String urlFinale = (fotoUrl == null || fotoUrl.isBlank())
+                ? "https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=400&auto=format&fit=crop&q=80"
+                : fotoUrl;
+        String ambFinale = (ambiente == null || ambiente.isBlank()) ? "BALCONE_CASA" : ambiente;
+
+        AttivitaRaccolto salvata = attivitaRaccoltoRepository.save(
+                new AttivitaRaccolto(tipoColtura, quantitaKg, LocalDate.now(), ambFinale, urlFinale, user, lotto)
+        );
+        return DTOMapper.toAttivitaDTO(salvata);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AttivitaDTO> getAttivita(Long userId) {
+        List<AttivitaRaccolto> list = (userId != null)
+                ? attivitaRaccoltoRepository.findByUserId(userId)
+                : attivitaRaccoltoRepository.findAll();
+        return list.stream().map(DTOMapper::toAttivitaDTO).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void eliminaAttivita(Long id) {
+        attivitaRaccoltoRepository.deleteById(id);
+    }
+}
+=== FILE: frontend/src/App.tsx ===
+import { useState, useEffect, useCallback } from 'react';
+import type { OrtoDTO, LottoDTO, AttrezzoDTO, UserDTO } from './types/types';
+import { Navbar, type ActiveTab } from './components/Navbar';
+import { OrtoList } from './components/OrtoList';
+import { LottoGrid } from './components/LottoGrid';
+import { AttrezziPanel } from './components/AttrezziPanel';
+import { PrenotaLottoModal } from './components/PrenotaLottoModal';
+import { LoginModal } from './components/LoginModal';
+import { MioBalconeView } from './components/MioBalcone';
+import { AdminDashboard } from './components/AdminDashboard';
+
+export function App() {
+  const [currentUser, setCurrentUser] = useState<UserDTO | null>(null);
+  const [activeTab, setActiveTab] = useState<ActiveTab>('ESPLORA');
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+
+  const [orti, setOrti] = useState<OrtoDTO[]>([]);
+  const [selectedOrto, setSelectedOrto] = useState<OrtoDTO | null>(null);
+
+  const [lotti, setLotti] = useState<LottoDTO[]>([]);
+  const [filtroStatoLotto, setFiltroStatoLotto] = useState<string>(''); // Usa @RequestParam ?stato=LIBERO
+  const [attrezzi, setAttrezzi] = useState<AttrezzoDTO[]>([]);
+  const [selectedLotto, setSelectedLotto] = useState<LottoDTO | null>(null);
+
+  const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('http://localhost:8080/api/auth/me', { credentials: 'include' })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((user: UserDTO | null) => {
+          if (user) setCurrentUser(user);
+        })
+        .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch('http://localhost:8080/api/orti')
+        .then((res) => res.json())
+        .then((data: OrtoDTO[]) => {
+          setOrti(data);
+          if (data.length > 0) setSelectedOrto(data[0]);
+        })
+        .catch(() => setErrorMsg('Impossibile contattare il server Spring Boot (porta 8080).'));
+  }, []);
+
+  const loadDettagliOrto = useCallback((ortoId: number, statoFiltro: string) => {
+    const query = statoFiltro ? `?stato=${statoFiltro}` : '';
+    fetch(`http://localhost:8080/api/orti/${ortoId}/lotti${query}`)
+        .then((res) => res.json())
+        .then((data: LottoDTO[]) => setLotti(data));
+
+    fetch(`http://localhost:8080/api/orti/${ortoId}/attrezzi`)
+        .then((res) => res.json())
+        .then((data: AttrezzoDTO[]) => setAttrezzi(data));
+  }, []);
+
+  useEffect(() => {
+    if (selectedOrto) {
+      setSelectedLotto(null);
+      loadDettagliOrto(selectedOrto.id, filtroStatoLotto);
+    }
+  }, [selectedOrto, filtroStatoLotto, loadDettagliOrto]);
+
+  const handleLogout = async () => {
+    await fetch('http://localhost:8080/api/auth/logout', { method: 'POST', credentials: 'include' });
+    setCurrentUser(null);
+    setSelectedLotto(null);
+    setActiveTab('ESPLORA');
+    setFeedbackMsg('Logout effettuato con successo.');
+  };
+
+  const handleToggleAttrezzo = async (attrezzoId: number, azione: 'preleva' | 'restituisci') => {
+    if (!currentUser) {
+      setShowLoginModal(true);
+      return;
+    }
+    setErrorMsg(null);
+    try {
+      const res = await fetch(`http://localhost:8080/api/attrezzi/${attrezzoId}/${azione}`, {
+        method: 'PUT',
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Operazione non autorizzata o non valida.');
+      if (selectedOrto) loadDettagliOrto(selectedOrto.id, filtroStatoLotto);
+      setFeedbackMsg(`Materiale aggiornato (${azione}) con successo!`);
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    }
+  };
+
+  return (
+      <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '1.5rem' }}>
+        <Navbar
+            currentUser={currentUser}
+            activeTab={activeTab}
+            onTabChange={(t) => { setActiveTab(t); setFeedbackMsg(null); setErrorMsg(null); }}
+            onOpenLogin={() => setShowLoginModal(true)}
+            onLogout={handleLogout}
+        />
+
+        {showLoginModal && (
+            <LoginModal
+                onClose={() => setShowLoginModal(false)}
+                onSuccess={(user) => {
+                  setCurrentUser(user);
+                  setShowLoginModal(false);
+                  setFeedbackMsg(`Benvenuto ${user.nome}! Sessione attiva.`);
+                }}
+            />
+        )}
+
+        {errorMsg && (
+            <div style={{ backgroundColor: '#ffebee', color: '#c62828', padding: '0.8rem 1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #ef9a9a' }}>
+              ⚠️ {errorMsg}
+            </div>
+        )}
+        {feedbackMsg && (
+            <div style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '0.8rem 1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #86efac' }}>
+              🌿 {feedbackMsg}
+            </div>
+        )}
+
+        {/* VISTA 1: ESPLORA ORTI & CONDIVISIONE */}
+        {activeTab === 'ESPLORA' && (
+            <main style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '2rem', alignItems: 'start' }}>
+              <OrtoList
+                  orti={orti}
+                  selectedOrto={selectedOrto}
+                  onSelectOrto={(o) => setSelectedOrto(o)}
+              />
+
+              <section style={{ backgroundColor: '#ffffff', padding: '1.8rem', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                {selectedOrto ? (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                        <div>
+                          <h2 style={{ margin: '0 0 0.3rem 0', color: '#1b5e20' }}>{selectedOrto.nome}</h2>
+                          <p style={{ margin: '0 0 0.3rem 0', color: '#475569' }}>{selectedOrto.descrizione}</p>
+                          <small style={{ color: '#64748b' }}>📍 {selectedOrto.indirizzo} • Superficie: {selectedOrto.mqTotali} mq</small>
+                        </div>
+
+                        {/* Filtro Lotti via Query String (@RequestParam) */}
+                        <div>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 'bold', display: 'block', marginBottom: '0.2rem' }}>
+                            Filtra per Stato:
+                          </label>
+                          <select
+                              value={filtroStatoLotto}
+                              onChange={(e) => setFiltroStatoLotto(e.target.value)}
+                              style={{ padding: '0.45rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                          >
+                            <option value="">Tutti i Lotti</option>
+                            <option value="LIBERO">Solo Liberi</option>
+                            <option value="IN_ATTESA">In Attesa</option>
+                            <option value="OCCUPATO">Occupati</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <LottoGrid
+                          lotti={lotti}
+                          selectedLotto={selectedLotto}
+                          ortoNome={selectedOrto.nome}
+                          onSelectLotto={(lotto) => {
+                            if (!currentUser) {
+                              setShowLoginModal(true);
+                              return;
+                            }
+                            setSelectedLotto(lotto);
+                          }}
+                      />
+
+                      {selectedLotto && currentUser && (
+                          <PrenotaLottoModal
+                              lotto={selectedLotto}
+                              userId={currentUser.id}
+                              onClose={() => setSelectedLotto(null)}
+                              onSuccess={(lottoId) => {
+                                setSelectedLotto(null);
+                                setFeedbackMsg(`Richiesta inviata per il lotto #${lottoId}! Un gestore la approverà a breve.`);
+                                loadDettagliOrto(selectedOrto.id, filtroStatoLotto);
+                              }}
+                          />
+                      )}
+
+                      <AttrezziPanel
+                          attrezzi={attrezzi}
+                          onPreleva={(id) => handleToggleAttrezzo(id, 'preleva')}
+                          onRestituisci={(id) => handleToggleAttrezzo(id, 'restituisci')}
+                      />
+                    </>
+                ) : (
+                    <p>Seleziona uno spazio verde dalla lista a sinistra.</p>
+                )}
+              </section>
+            </main>
+        )}
+
+        {/* VISTA 2: IL MIO BALCONE & GALLERIA PIANTE CON FOTO */}
+        {activeTab === 'BALCONE' && (
+            <MioBalconeView
+                currentUser={currentUser}
+                lotti={lotti}
+                onOpenLogin={() => setShowLoginModal(true)}
+            />
+        )}
+
+        {/* VISTA 3: AREA AMMINISTRAZIONE GESTORE */}
+        {activeTab === 'ADMIN' && currentUser?.ruolo === 'ROLE_GESTORE' && (
+            <AdminDashboard
+                orti={orti}
+                onDataUpdated={() => {
+                  if (selectedOrto) loadDettagliOrto(selectedOrto.id, filtroStatoLotto);
+                }}
+            />
+        )}
+      </div>
+  );
+}
+
+export default App;
+=== FILE: frontend/src/main.tsx ===
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.tsx'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+=== FILE: frontend/src/types/types.ts ===
+export interface UserDTO {
+    id: number;
+    username: string;
+    nome: string;
+    ruolo: "ROLE_CITTADINO" | "ROLE_GESTORE";
+}
+
+export interface OrtoDTO {
+    id: number;
+    nome: string;
+    indirizzo: string;
+    descrizione: string;
+    mqTotali: number;
+}
+
+export interface LottoDTO {
+    id: number;
+    codice: string;
+    dimensioneMq: number;
+    stato: "LIBERO" | "OCCUPATO" | "IN_ATTESA";
+    ortoId: number;
+    ortoNome: string;
+}
+
+export interface AttrezzoDTO {
+    id: number;
+    nome: string;
+    disponibile: boolean;
+    ortoId: number;
+}
+
+export interface PrenotazioneDTO {
+    id: number;
+    dataInizio: string;
+    dataFine: string;
+    stato: "IN_ATTESA" | "APPROVATA" | "RIFIUTATA";
+    userId: number;
+    username: string;
+    lottoId: number;
+    lottoCodice: string;
+}
+
+export interface AttivitaDTO {
+    id: number;
+    tipoColtura: string;
+    quantitaKg: number;
+    dataRaccolto: string;
+    ambiente: "BALCONE_CASA" | "ORTO_CONDIVISO";
+    fotoUrl: string;
+    username: string;
+    lottoCodice: string;
+}
+=== FILE: frontend/src/components/LoginModal.tsx ===
+import React, { useState } from 'react';
+import type { UserDTO } from '../types/types';
+
+interface LoginModalProps {
+    onSuccess: (user: UserDTO) => void;
+    onClose: () => void;
+}
+
+export const LoginModal: React.FC<LoginModalProps> = ({ onSuccess, onClose }) => {
+    const [username, setUsername] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setLoading(true);
+
+        try {
+            const res = await fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ username, password })
+            });
+
+            if (!res.ok) {
+                throw new Error('Username o password errati (401 Unauthorized)');
+            }
+
+            const user: UserDTO = await res.json();
+            onSuccess(user);
+        } catch (err: any) {
+            setError(err.message || 'Errore di autenticazione');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+        }} onClick={onClose}>
+            <div
+                onClick={(e) => e.stopPropagation()} // Blocca il bubbling dell'evento click!
+                style={{
+                    backgroundColor: '#fff',
+                    padding: '2rem',
+                    borderRadius: '12px',
+                    width: '100%',
+                    maxWidth: '420px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                }}
+            >
+                <h2 style={{ marginTop: 0, color: '#1b5e20' }}>🔐 Accesso Utente</h2>
+                <p style={{ fontSize: '0.9rem', color: '#555' }}>
+                    Inserisci le tue credenziali per gestire il tuo balcone o prenotare lotti condivisi.
+                </p>
+
+                {error && (
+                    <div style={{ backgroundColor: '#ffebee', color: '#c62828', padding: '0.6rem', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.85rem' }}>
+                        ⚠️ {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div>
+                        <label htmlFor="loginUser" style={{ display: 'block', fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                            Username:
+                        </label>
+                        <input
+                            id="loginUser"
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="es. mario oppure admin"
+                            required
+                            style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="loginPass" style={{ display: 'block', fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                            Password:
+                        </label>
+                        <input
+                            id="loginPass"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Inserisci la password"
+                            required
+                            style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                        />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.8rem', marginTop: '0.5rem' }}>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            style={{ flex: 1, padding: '0.7rem', backgroundColor: '#2e7d32', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}
+                        >
+                            {loading ? 'Verifica...' : 'Entra'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            style={{ padding: '0.7rem 1rem', backgroundColor: '#e2e8f0', color: '#334155', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                            Chiudi
+                        </button>
+                    </div>
+                </form>
+
+                {/* Scorciatoia rapida per la demo d'esame */}
+                <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px dashed #cbd5e1', fontSize: '0.8rem', color: '#64748b' }}>
+                    <div style={{ marginBottom: '0.4rem' }}>💡 <strong>Auto-compila credenziali per Demo Esame:</strong></div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                            type="button"
+                            onClick={() => { setUsername('mario'); setPassword('pass123'); }}
+                            style={{ padding: '0.3rem 0.6rem', backgroundColor: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                            Cittadino (mario / pass123)
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setUsername('admin'); setPassword('admin123'); }}
+                            style={{ padding: '0.3rem 0.6rem', backgroundColor: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                            Gestore (admin / admin123)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+=== FILE: frontend/src/components/Navbar.tsx ===
+import React from 'react';
+import type { UserDTO } from '../types/types';
+
+export type ActiveTab = 'ESPLORA' | 'BALCONE' | 'ADMIN';
+
+interface NavbarProps {
+    currentUser: UserDTO | null;
+    activeTab: ActiveTab;
+    onTabChange: (tab: ActiveTab) => void;
+    onOpenLogin: () => void;
+    onLogout: () => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({
+                                                  currentUser,
+                                                  activeTab,
+                                                  onTabChange,
+                                                  onOpenLogin,
+                                                  onLogout
+                                              }) => {
+    const navBtnStyle = (tab: ActiveTab): React.CSSProperties => ({
+        padding: '0.55rem 1rem',
+        borderRadius: '6px',
+        border: 'none',
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        fontSize: '0.9rem',
+        backgroundColor: activeTab === tab ? '#ffffff' : 'rgba(255, 255, 255, 0.15)',
+        color: activeTab === tab ? '#1b5e20' : '#ffffff'
+    });
+
+    return (
+        <header style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            padding: '1rem 1.8rem',
+            background: 'linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%)',
+            color: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(27, 94, 32, 0.2)',
+            marginBottom: '1.5rem'
+        }}>
+            {/* Brand */}
+            <div>
+                <h1 style={{ margin: 0, fontSize: '1.5rem', color: '#fff', letterSpacing: '-0.5px' }}>
+                    🌱 GreenShare
+                </h1>
+                <small style={{ color: '#c8e6c9' }}>
+                    Dal tuo Balcone di Casa agli Orti Condivisi di Quartiere
+                </small>
+            </div>
+
+            {/* Menu di Navigazione SPA */}
+            <nav style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+                <button style={navBtnStyle('ESPLORA')} onClick={() => onTabChange('ESPLORA')}>
+                    🌍 Esplora Orti & Scambio
+                </button>
+
+                <button style={navBtnStyle('BALCONE')} onClick={() => onTabChange('BALCONE')}>
+                    🏡 Il Mio Balcone & Piante
+                </button>
+
+                {currentUser?.ruolo === 'ROLE_GESTORE' && (
+                    <button style={navBtnStyle('ADMIN')} onClick={() => onTabChange('ADMIN')}>
+                        👑 Area Gestore
+                    </button>
+                )}
+            </nav>
+
+            {/* Stato Autenticazione */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                {currentUser ? (
+                    <>
+                        <div style={{ textAlign: 'right', fontSize: '0.85rem' }}>
+                            <div><strong>{currentUser.nome}</strong></div>
+                            <span style={{
+                                backgroundColor: currentUser.ruolo === 'ROLE_GESTORE' ? '#ffb300' : '#81c784',
+                                color: '#1b5e20',
+                                padding: '0.1rem 0.4rem',
+                                borderRadius: '4px',
+                                fontWeight: 'bold',
+                                fontSize: '0.7rem'
+                            }}>
+                {currentUser.ruolo === 'ROLE_GESTORE' ? 'AMMINISTRATORE' : 'CITTADINO'}
+              </span>
+                        </div>
+                        <button
+                            onClick={onLogout}
+                            style={{
+                                padding: '0.45rem 0.9rem',
+                                backgroundColor: '#c62828',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            Esci
+                        </button>
+                    </>
+                ) : (
+                    <button
+                        onClick={onOpenLogin}
+                        style={{
+                            padding: '0.55rem 1.1rem',
+                            backgroundColor: '#ffb300',
+                            color: '#1b5e20',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        🔐 Accedi con Password
+                    </button>
+                )}
+            </div>
+        </header>
+    );
+};
+=== FILE: frontend/src/components/LottoGrid.tsx ===
+import React from 'react';
+import { type LottoDTO } from '../types/types';
+import { LottoCard } from './LottoCards.tsx';
+
+interface LottoGridProps {
+    lotti: LottoDTO[];
+    selectedLotto: LottoDTO | null;
+    onSelectLotto: (lotto: LottoDTO) => void;
+    ortoNome: string;
+}
+
+export const LottoGrid: React.FC<LottoGridProps> = ({
+                                                        lotti,
+                                                        selectedLotto,
+                                                        onSelectLotto,
+                                                        ortoNome
+                                                    }) => {
+    return (
+        <div style={{ marginTop: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.1rem', color: '#333', marginBottom: '1rem' }}>
+                Lotti e Cassoni disponibili in: <em>{ortoNome}</em>
+            </h3>
+
+            {lotti.length === 0 ? (
+                <p style={{ color: '#888', fontStyle: 'italic' }}>
+                    Nessun lotto registrato per questa area verde.
+                </p>
+            ) : (
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                    gap: '1rem'
+                }}>
+                    {lotti.map((lotto) => (
+                        <LottoCard
+                            key={lotto.id}
+                            lotto={lotto}
+                            isSelected={selectedLotto?.id === lotto.id}
+                            onSelect={onSelectLotto}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+=== FILE: frontend/src/components/MioBalcone.tsx ===
+import React, { useState, useEffect, useCallback } from 'react';
+import type { AttivitaDTO, LottoDTO, UserDTO } from '../types/types';
+import { DiarioRaccoltoForm } from './DiarioRaccoltoForm';
+
+interface MioBalconeViewProps {
+    currentUser: UserDTO | null;
+    lotti: LottoDTO[];
+    onOpenLogin: () => void;
+}
+
+export const MioBalconeView: React.FC<MioBalconeViewProps> = ({
+                                                                  currentUser,
+                                                                  lotti,
+                                                                  onOpenLogin
+                                                              }) => {
+    const [piante, setPiante] = useState<AttivitaDTO[]>([]);
+    const [filtroSoloMie, setFiltroSoloMie] = useState<boolean>(false);
+    const [feedback, setFeedback] = useState<string | null>(null);
+
+    // Chiama GET /api/attivita o GET /api/attivita?userId=... (Usa @RequestParam!)
+    const caricaPiante = useCallback(() => {
+        const url = (filtroSoloMie && currentUser)
+            ? `http://localhost:8080/api/attivita?userId=${currentUser.id}`
+            : 'http://localhost:8080/api/attivita';
+
+        fetch(url, { credentials: 'include' })
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error('Errore nel caricamento delle piante: ' + res.status);
+                }
+                return res.json();
+            })
+            .then((data) => {
+                // Controllo di sicurezza: imposta lo stato solo se è davvero un Array!
+                if (Array.isArray(data)) {
+                    setPiante(data);
+                } else {
+                    setPiante([]);
+                }
+            })
+            .catch((err) => {
+                console.error('Errore caricamento piante:', err);
+                setPiante([]); // Evita la schermata bianca in caso di errore!
+            });
+    }, [filtroSoloMie, currentUser]);
+
+    useEffect(() => {
+        caricaPiante();
+    }, [caricaPiante]);
+
+    return (
+        <div>
+            {/* Banner Introduttivo */}
+            <div style={{
+                backgroundColor: '#ffffff',
+                padding: '1.5rem',
+                borderRadius: '12px',
+                border: '1px solid #bbf7d0',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '1rem'
+            }}>
+                <div>
+                    <h2 style={{ margin: '0 0 0.4rem 0', color: '#1b5e20' }}>
+                        🏡 Il Mio Balcone & Galleria Piante della Comunità
+                    </h2>
+                    <p style={{ margin: 0, color: '#475569', fontSize: '0.95rem' }}>
+                        Coltiva sul balcone di casa tua e, quando hai bisogno di più spazio, espanditi negli appezzamenti condivisi del quartiere!
+                    </p>
+                </div>
+
+                {currentUser && (
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                            onClick={() => setFiltroSoloMie(false)}
+                            style={{
+                                padding: '0.45rem 0.9rem',
+                                borderRadius: '6px',
+                                border: '1px solid #2e7d32',
+                                backgroundColor: !filtroSoloMie ? '#2e7d32' : '#fff',
+                                color: !filtroSoloMie ? '#fff' : '#2e7d32',
+                                cursor: 'pointer',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            Tutte le Piante
+                        </button>
+                        <button
+                            onClick={() => setFiltroSoloMie(true)}
+                            style={{
+                                padding: '0.45rem 0.9rem',
+                                borderRadius: '6px',
+                                border: '1px solid #2e7d32',
+                                backgroundColor: filtroSoloMie ? '#2e7d32' : '#fff',
+                                color: filtroSoloMie ? '#fff' : '#2e7d32',
+                                cursor: 'pointer',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            Solo le Mie Piante
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {feedback && (
+                <div style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '0.8rem 1rem', borderRadius: '8px', marginBottom: '1rem', fontWeight: 'bold' }}>
+                    🌿 {feedback}
+                </div>
+            )}
+
+            {/* Se loggato mostra il Form per aggiungere piante con foto */}
+            {currentUser ? (
+                <DiarioRaccoltoForm
+                    lotti={lotti}
+                    userId={currentUser.id}
+                    onActivityAdded={(msg) => {
+                        setFeedback(msg);
+                        caricaPiante();
+                    }}
+                />
+            ) : (
+                <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a', padding: '1rem 1.5rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>🔐 Effettua il login per caricare le foto delle piante del tuo balcone!</span>
+                    <button
+                        onClick={onOpenLogin}
+                        style={{ padding: '0.45rem 1rem', backgroundColor: '#d97706', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                    >
+                        Accedi Ora
+                    </button>
+                </div>
+            )}
+
+            {/* Griglia Fotografica delle Piante */}
+            {piante.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem', backgroundColor: '#fff', borderRadius: '12px' }}>
+                    Nessuna pianta ancora registrata. Usa il modulo qui sopra per aggiungere la prima pianta con foto!
+                </p>
+            ) : (
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                    gap: '1.5rem'
+                }}>
+                    {piante.map((p) => (
+                        <div
+                            key={p.id}
+                            style={{
+                                backgroundColor: '#fff',
+                                borderRadius: '12px',
+                                overflow: 'hidden',
+                                border: '1px solid #e2e8f0',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
+                            }}
+                        >
+                            <img
+                                src={p.fotoUrl || 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=400'}
+                                alt={p.tipoColtura}
+                                style={{ width: '100%', height: '180px', objectFit: 'cover' }}
+                            />
+                            <div style={{ padding: '1rem' }}>
+                <span style={{
+                    display: 'inline-block',
+                    fontSize: '0.72rem',
+                    fontWeight: 'bold',
+                    padding: '0.2rem 0.5rem',
+                    borderRadius: '12px',
+                    marginBottom: '0.5rem',
+                    backgroundColor: p.ambiente === 'BALCONE_CASA' ? '#e0f2fe' : '#dcfce7',
+                    color: p.ambiente === 'BALCONE_CASA' ? '#0369a1' : '#15803d'
+                }}>
+                  {p.ambiente === 'BALCONE_CASA' ? '🏡 BALCONE DI CASA' : '🌳 ORTO CONDIVISO'}
+                </span>
+
+                                <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.1rem', color: '#1e293b' }}>
+                                    {p.tipoColtura}
+                                </h4>
+                                <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.85rem', color: '#475569' }}>
+                                    📦 Raccolto/Stima: <strong>{p.quantitaKg} kg</strong> • Spazio: <strong>{p.lottoCodice}</strong>
+                                </p>
+                                <small style={{ color: '#94a3b8' }}>
+                                    Coltivata da {p.username} il {p.dataRaccolto}
+                                </small>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+=== FILE: frontend/src/components/PrenotaLottoModal.tsx ===
+import React, { useState } from 'react';
+import type { LottoDTO } from '../types/types';
+
+interface PrenotaLottoModalProps {
+    lotto: LottoDTO;
+    userId: number;
+    onClose: () => void;
+    onSuccess: (lottoId: number) => void;
+}
+
+export const PrenotaLottoModal: React.FC<PrenotaLottoModalProps> = ({
+                                                                        lotto,
+                                                                        userId,
+                                                                        onClose,
+                                                                        onSuccess
+                                                                    }) => {
+    const [dataInizio, setDataInizio] = useState<string>('2026-11-15');
+    const [dataFine, setDataFine] = useState<string>('2027-05-15');
+    const [loading, setLoading] = useState<boolean>(false);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault(); // Blocca il ricaricamento pagina del browser
+        setLoading(true);
+        setErrorMsg(null);
+
+        try {
+            const response = await fetch('http://localhost:8080/api/prenotazioni', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // Invia il cookie di sessione HttpOnly
+                body: JSON.stringify({
+                    userId,
+                    lottoId: lotto.id,
+                    dataInizio,
+                    dataFine
+                })
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || 'Errore durante la prenotazione');
+            }
+
+            // Notifica al genitore App.tsx che la prenotazione è andata a buon fine
+            onSuccess(lotto.id);
+        } catch (err: any) {
+            setErrorMsg(err.message || 'Errore di rete');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div style={{
+            marginTop: '1.5rem',
+            padding: '1.5rem',
+            border: '2px solid #2e7d32',
+            borderRadius: '8px',
+            backgroundColor: '#ffffff'
+        }}>
+            <h3 style={{ marginTop: 0, color: '#1b5e20' }}>
+                📅 Richiedi Assegnazione: {lotto.codice} ({lotto.dimensioneMq} mq)
+            </h3>
+
+            {errorMsg && (
+                <div style={{ color: '#c62828', backgroundColor: '#ffebee', padding: '0.5rem', borderRadius: '4px', marginBottom: '1rem' }}>
+                    {errorMsg}
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                    <label htmlFor="dataInizio" style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                        Data Inizio Coltivazione:
+                    </label>
+                    <input
+                        id="dataInizio"
+                        type="date"
+                        value={dataInizio}
+                        onChange={(e) => setDataInizio(e.target.value)}
+                        required
+                        style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+                    />
+                </div>
+
+                <div>
+                    <label htmlFor="dataFine" style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                        Data Fine Stagione:
+                    </label>
+                    <input
+                        id="dataFine"
+                        type="date"
+                        value={dataFine}
+                        onChange={(e) => setDataFine(e.target.value)}
+                        required
+                        style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+                    />
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        style={{
+                            padding: '0.6rem 1.2rem',
+                            backgroundColor: '#2e7d32',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        {loading ? 'Invio in corso...' : 'Conferma Prenotazione'}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        style={{
+                            padding: '0.6rem 1.2rem',
+                            backgroundColor: '#9e9e9e',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Annulla
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+};
+=== FILE: frontend/src/components/AttrezziPanel.tsx ===
+import React from 'react';
+import { type AttrezzoDTO } from '../types/types';
+
+interface AttrezziPanelProps {
+    attrezzi: AttrezzoDTO[];
+    onPreleva: (attrezzoId: number) => void;
+    onRestituisci: (attrezzoId: number) => void;
+}
+
+export const AttrezziPanel: React.FC<AttrezziPanelProps> = ({
+                                                                attrezzi,
+                                                                onPreleva,
+                                                                onRestituisci
+                                                            }) => {
+    return (
+        <div style={{
+            marginTop: '2rem',
+            backgroundColor: '#f1f8e9',
+            padding: '1rem 1.5rem',
+            borderRadius: '8px',
+            border: '1px solid #c8e6c9'
+        }}>
+            <h3 style={{ margin: '0 0 1rem 0', color: '#2e7d32', fontSize: '1.1rem' }}>
+                🛠️ Banca degli Attrezzi e Materiali Condivisi
+            </h3>
+
+            {attrezzi.length === 0 ? (
+                <p style={{ color: '#666', fontSize: '0.9rem' }}>Nessun materiale disponibile al momento.</p>
+            ) : (
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    {attrezzi.map((a) => (
+                        <li
+                            key={a.id}
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '0.6rem 0',
+                                borderBottom: '1px solid #e0e0e0'
+                            }}
+                        >
+              <span>
+                <strong>{a.nome}</strong> — {a.disponibile ? (
+                  <span style={{ color: '#2e7d32' }}>Disponibile</span>
+              ) : (
+                  <span style={{ color: '#d32f2f' }}>In uso</span>
+              )}
+              </span>
+
+                            {a.disponibile ? (
+                                <button
+                                    onClick={() => onPreleva(a.id)}
+                                    style={{
+                                        padding: '0.3rem 0.6rem',
+                                        backgroundColor: '#388e3c',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Preleva
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => onRestituisci(a.id)}
+                                    style={{
+                                        padding: '0.3rem 0.6rem',
+                                        backgroundColor: '#757575',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Restituisci
+                                </button>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+};
+=== FILE: frontend/src/components/LottoCards.tsx ===
+import React from 'react';
+import { type LottoDTO } from '../types/types';
+
+interface LottoCardProps {
+    lotto: LottoDTO;
+    onSelect: (lotto: LottoDTO) => void;
+    isSelected: boolean;
+}
+
+export const LottoCard: React.FC<LottoCardProps> = ({ lotto, onSelect, isSelected }) => {
+    // Configurazione cromatica in base allo stato
+    const getBadgeStyle = (stato: string) => {
+        switch (stato) {
+            case 'LIBERO':
+                return { backgroundColor: '#e8f5e9', color: '#2e7d32', border: '1px solid #81c784' };
+            case 'OCCUPATO':
+                return { backgroundColor: '#ffebee', color: '#c62828', border: '1px solid #e57373' };
+            default:
+                return { backgroundColor: '#fff8e1', color: '#f57f17', border: '1px solid #ffd54f' };
+        }
+    };
+
+    return (
+        <div
+            style={{
+                border: isSelected ? '2px solid #1b5e20' : '1px solid #ddd',
+                borderRadius: '8px',
+                padding: '1rem',
+                backgroundColor: '#fff',
+                boxShadow: isSelected ? '0 4px 8px rgba(0,0,0,0.1)' : 'none',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between'
+            }}
+        >
+            <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0' }}>{lotto.codice}</h4>
+                    <span style={{
+                        fontSize: '0.75rem',
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '12px',
+                        fontWeight: 'bold',
+                        ...getBadgeStyle(lotto.stato)
+                    }}>
+            {lotto.stato}
+          </span>
+                </div>
+                <p style={{ margin: '0.5rem 0', fontSize: '0.9rem', color: '#666' }}>
+                    Superficie: <strong>{lotto.dimensioneMq} mq</strong>
+                </p>
+            </div>
+
+            <button
+                disabled={lotto.stato !== 'LIBERO'}
+                onClick={() => onSelect(lotto)}
+                style={{
+                    marginTop: '1rem',
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: lotto.stato === 'LIBERO' ? '#2e7d32' : '#ccc',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: lotto.stato === 'LIBERO' ? 'pointer' : 'not-allowed',
+                    fontWeight: 'bold'
+                }}
+            >
+                {lotto.stato === 'LIBERO' ? 'Richiedi Lotto' : 'Non Disponibile'}
+            </button>
+        </div>
+    );
+};
+=== FILE: frontend/src/components/OrtoCard.tsx ===
+import React from 'react';
+import { type OrtoDTO } from '../types/types';
+
+interface OrtoCardProps {
+    orto: OrtoDTO;
+    isSelected: boolean;
+    onSelect: (orto: OrtoDTO) => void;
+}
+
+export const OrtoCard: React.FC<OrtoCardProps> = ({ orto, isSelected, onSelect }) => {
+    return (
+        <div
+            onClick={() => onSelect(orto)}
+            style={{
+                border: isSelected ? '2px solid #2e7d32' : '1px solid #ccc',
+                backgroundColor: isSelected ? '#e8f5e9' : '#fff',
+                borderRadius: '8px',
+                padding: '1rem',
+                cursor: 'pointer',
+                transition: 'box-shadow 0.2s',
+                marginBottom: '1rem'
+            }}
+        >
+            <h3 style={{ margin: '0 0 0.5rem 0', color: '#1b5e20' }}>{orto.nome}</h3>
+            <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: '#555' }}>📍 {orto.indirizzo}</p>
+            <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem' }}>{orto.descrizione}</p>
+            <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#333' }}>
+        Estensione: {orto.mqTotali} mq
+      </span>
+        </div>
+    );
+};
+=== FILE: frontend/src/components/OrtoList.tsx ===
+import React from 'react';
+import type { OrtoDTO } from '../types/types';
+import { OrtoCard } from './OrtoCard';
+
+interface OrtoListProps {
+    orti: OrtoDTO[];
+    selectedOrto: OrtoDTO | null;
+    onSelectOrto: (orto: OrtoDTO) => void;
+}
+
+export const OrtoList: React.FC<OrtoListProps> = ({
+                                                      orti,
+                                                      selectedOrto,
+                                                      onSelectOrto
+                                                  }) => {
+    return (
+        <section>
+            <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#1b5e20' }}>
+                Spazi Verdi & Comunità
+            </h2>
+            {orti.length === 0 ? (
+                <p style={{ color: '#666' }}>Caricamento spazi in corso...</p>
+            ) : (
+                orti.map((orto) => (
+                    <OrtoCard
+                        key={orto.id}
+                        orto={orto}
+                        isSelected={selectedOrto?.id === orto.id}
+                        onSelect={onSelectOrto}
+                    />
+                ))
+            )}
+        </section>
+    );
+};
+=== FILE: frontend/src/components/AdminDashboard.tsx ===
+import React, { useState, useEffect, useCallback } from 'react';
+import type { PrenotazioneDTO, UserDTO, OrtoDTO } from '../types/types';
+
+interface AdminDashboardProps {
+    orti: OrtoDTO[];
+    onDataUpdated: () => void;
+}
+
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ orti, onDataUpdated }) => {
+    const [prenotazioni, setPrenotazioni] = useState<PrenotazioneDTO[]>([]);
+    const [utenti, setUtenti] = useState<UserDTO[]>([]);
+    const [nuovoAttrezzoNome, setNuovoAttrezzoNome] = useState<string>('');
+    const [ortoTargetId, setOrtoTargetId] = useState<number>(orti.length > 0 ? orti[0].id : 1);
+    const [msg, setMsg] = useState<string | null>(null);
+
+    const caricaDatiAdmin = useCallback(() => {
+        fetch('http://localhost:8080/api/prenotazioni', { credentials: 'include' })
+            .then((res) => res.json())
+            .then((data: PrenotazioneDTO[]) => setPrenotazioni(data));
+
+        fetch('http://localhost:8080/api/utenti', { credentials: 'include' })
+            .then((res) => res.json())
+            .then((data: UserDTO[]) => setUtenti(data));
+    }, []);
+
+    useEffect(() => {
+        caricaDatiAdmin();
+    }, [caricaDatiAdmin]);
+
+    const handleApprova = async (id: number) => {
+        await fetch(`http://localhost:8080/api/prenotazioni/${id}/approva`, {
+            method: 'PUT',
+            credentials: 'include'
+        });
+        setMsg(`Prenotazione #${id} approvata! Il lotto ora è OCCUPATO.`);
+        caricaDatiAdmin();
+        onDataUpdated();
+    };
+
+    const handleRifiuta = async (id: number) => {
+        await fetch(`http://localhost:8080/api/prenotazioni/${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        setMsg(`Prenotazione #${id} rifiutata/cancellata. Il lotto è tornato LIBERO.`);
+        caricaDatiAdmin();
+        onDataUpdated();
+    };
+
+    const handleAggiungiAttrezzo = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await fetch(`http://localhost:8080/api/orti/${ortoTargetId}/attrezzi`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ nome: nuovoAttrezzoNome })
+        });
+        setMsg(`Materiale "${nuovoAttrezzoNome}" aggiunto con successo alla comunità!`);
+        setNuovoAttrezzoNome('');
+        onDataUpdated();
+    };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ backgroundColor: '#fff', padding: '1.5rem', borderRadius: '12px', border: '2px solid #ffb300' }}>
+                <h2 style={{ margin: '0 0 0.4rem 0', color: '#b45309' }}>
+                    👑 Pannello di Controllo Gestore (`ROLE_GESTORE`)
+                </h2>
+                <p style={{ margin: 0, color: '#555' }}>
+                    Approva o rifiuta le richieste di lotti, controlla gli utenti iscritti e aggiungi nuovi attrezzi o sacchi di terriccio.
+                </p>
+            </div>
+
+            {msg && (
+                <div style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '0.8rem 1rem', borderRadius: '8px', fontWeight: 'bold' }}>
+                    ✅ {msg}
+                </div>
+            )}
+
+            {/* Sezione 1: Gestione Richieste Prenotazione Lotti */}
+            <div style={{ backgroundColor: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ marginTop: 0 }}>📋 Richieste di Assegnazione Lotti</h3>
+                {prenotazioni.length === 0 ? (
+                    <p style={{ color: '#64748b' }}>Nessuna richiesta di prenotazione presente.</p>
+                ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                        <thead>
+                        <tr style={{ backgroundColor: '#f8fafc', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
+                            <th style={{ padding: '0.6rem' }}>ID</th>
+                            <th style={{ padding: '0.6rem' }}>Utente</th>
+                            <th style={{ padding: '0.6rem' }}>Lotto</th>
+                            <th style={{ padding: '0.6rem' }}>Periodo</th>
+                            <th style={{ padding: '0.6rem' }}>Stato</th>
+                            <th style={{ padding: '0.6rem' }}>Azioni Gestore</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {prenotazioni.map((p) => (
+                            <tr key={p.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                <td style={{ padding: '0.6rem' }}>#{p.id}</td>
+                                <td style={{ padding: '0.6rem' }}><strong>{p.username}</strong></td>
+                                <td style={{ padding: '0.6rem' }}>{p.lottoCodice}</td>
+                                <td style={{ padding: '0.6rem' }}>{p.dataInizio} → {p.dataFine}</td>
+                                <td style={{ padding: '0.6rem' }}>
+                    <span style={{
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '10px',
+                        fontWeight: 'bold',
+                        fontSize: '0.75rem',
+                        backgroundColor: p.stato === 'APPROVATA' ? '#dcfce7' : '#fef3c7',
+                        color: p.stato === 'APPROVATA' ? '#166534' : '#b45309'
+                    }}>
+                      {p.stato}
+                    </span>
+                                </td>
+                                <td style={{ padding: '0.6rem', display: 'flex', gap: '0.5rem' }}>
+                                    {p.stato === 'IN_ATTESA' && (
+                                        <button
+                                            onClick={() => handleApprova(p.id)}
+                                            style={{ padding: '0.35rem 0.7rem', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                                        >
+                                            ✓ Approva
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => handleRifiuta(p.id)}
+                                        style={{ padding: '0.35rem 0.7rem', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                    >
+                                        ✕ Rifiuta / Libera Lotto
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+
+            {/* Sezione 2: Aggiungi Nuovo Materiale / Terriccio Condiviso */}
+            <div style={{ backgroundColor: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ marginTop: 0 }}>🛠️ Aggiungi Nuovo Attrezzo o Sacco di Terriccio alla Banca</h3>
+                <form onSubmit={handleAggiungiAttrezzo} style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <select
+                        value={ortoTargetId}
+                        onChange={(e) => setOrtoTargetId(Number(e.target.value))}
+                        style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    >
+                        {orti.map((o) => (
+                            <option key={o.id} value={o.id}>{o.nome}</option>
+                        ))}
+                    </select>
+                    <input
+                        type="text"
+                        placeholder="Es. Sacco Compost Bio 25L, Forbici Pota..."
+                        value={nuovoAttrezzoNome}
+                        onChange={(e) => setNuovoAttrezzoNome(e.target.value)}
+                        required
+                        style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    />
+                    <button
+                        type="submit"
+                        style={{ padding: '0.5rem 1.2rem', backgroundColor: '#2e7d32', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                        ➕ Aggiungi Materiale
+                    </button>
+                </form>
+            </div>
+
+            {/* Sezione 3: Controllo Utenti Registrati */}
+            <div style={{ backgroundColor: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ marginTop: 0 }}>👥 Utenti Registrati nella Piattaforma</h3>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    {utenti.map((u) => (
+                        <div key={u.id} style={{ padding: '0.8rem 1.2rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                            <strong>{u.nome}</strong> (@{u.username}) — <span style={{ color: '#2e7d32', fontWeight: 'bold' }}>{u.ruolo}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+=== FILE: frontend/src/components/DiarioRaccoltoForm.tsx ===
+import React, { useState } from 'react';
+import type { LottoDTO } from '../types/types';
+
+interface DiarioRaccoltoFormProps {
+    lotti: LottoDTO[];
+    userId: number;
+    onActivityAdded: (messaggio: string) => void;
+}
+
+const FOTO_PRESET = [
+    { label: '🍅 Pomodori in vaso', url: 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=500&auto=format&fit=crop&q=80' },
+    { label: '🌿 Basilico & Aromi', url: 'https://images.unsplash.com/photo-1618375569909-3c8616cf7733?w=500&auto=format&fit=crop&q=80' },
+    { label: '🍓 Fragole da balcone', url: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=500&auto=format&fit=crop&q=80' },
+    { label: '🌶️ Peperoncini', url: 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=500&auto=format&fit=crop&q=80' },
+    { label: '🥬 Ortaggi condivisi', url: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500&auto=format&fit=crop&q=80' }
+];
+
+export const DiarioRaccoltoForm: React.FC<DiarioRaccoltoFormProps> = ({
+                                                                          lotti,
+                                                                          userId,
+                                                                          onActivityAdded
+                                                                      }) => {
+    const [lottoId, setLottoId] = useState<number>(lotti.length > 0 ? lotti[0].id : 1);
+    const [tipoColtura, setTipoColtura] = useState<string>('');
+    const [quantitaKg, setQuantitaKg] = useState<string>('1.0');
+    const [ambiente, setAmbiente] = useState<string>('BALCONE_CASA');
+    const [fotoUrl, setFotoUrl] = useState<string>(FOTO_PRESET[0].url);
+    const [submitting, setSubmitting] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Funzione per caricare una vera immagine dal computer (Mac/PC) tramite FileReader
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            if (typeof reader.result === 'string') {
+                setFotoUrl(reader.result); // Salva l'immagine convertita in Base64 nello stato!
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        setError(null);
+
+        // Se lotti non fosse ancora caricato, usa l'id 1 di default per non bloccare mai la richiesta
+        const targetLottoId = lotti.length > 0 ? Number(lottoId) : 1;
+
+        try {
+            const response = await fetch('http://localhost:8080/api/attivita', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    userId,
+                    lottoId: targetLottoId,
+                    tipoColtura,
+                    quantitaKg: parseFloat(quantitaKg),
+                    ambiente,
+                    fotoUrl
+                })
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(errText || 'Errore durante il salvataggio sul server');
+            }
+
+            onActivityAdded(`Aggiunta pianta "${tipoColtura}" (${ambiente === 'BALCONE_CASA' ? 'Mio Balcone' : 'Orto Condiviso'})!`);
+            setTipoColtura('');
+        } catch (err: any) {
+            setError(err.message || 'Errore durante il salvataggio');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div style={{
+            backgroundColor: '#ffffff',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            border: '1px solid #cbd5e1',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+            marginBottom: '2rem'
+        }}>
+            <h3 style={{ margin: '0 0 1rem 0', color: '#1b5e20' }}>
+                🪴 Aggiungi una Pianta al tuo Balcone o Registra un Raccolto
+            </h3>
+
+            {error && (
+                <div style={{ backgroundColor: '#ffebee', color: '#c62828', padding: '0.7rem', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                    ⚠️ {error}
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                        Nome Pianta / Coltura:
+                    </label>
+                    <input
+                        type="text"
+                        placeholder="Es. Rosmarino, Monstera, Pomodori..."
+                        value={tipoColtura}
+                        onChange={(e) => setTipoColtura(e.target.value)}
+                        required
+                        style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                        Dove si trova:
+                    </label>
+                    <select
+                        value={ambiente}
+                        onChange={(e) => setAmbiente(e.target.value)}
+                        style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    >
+                        <option value="BALCONE_CASA">🏡 Il Mio Balcone di Casa</option>
+                        <option value="ORTO_CONDIVISO">🌳 Espansione in Orto Condiviso</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                        Spazio / Lotto collegato:
+                    </label>
+                    <select
+                        value={lottoId}
+                        onChange={(e) => setLottoId(Number(e.target.value))}
+                        style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    >
+                        {lotti.length > 0 ? (
+                            lotti.map((l) => (
+                                <option key={l.id} value={l.id}>{l.codice}</option>
+                            ))
+                        ) : (
+                            <option value={1}>B-01 (Balcone / Default)</option>
+                        )}
+                    </select>
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                        Stima Raccolto / Peso (Kg):
+                    </label>
+                    <input
+                        type="number"
+                        step="0.1"
+                        min="0.1"
+                        value={quantitaKg}
+                        onChange={(e) => setQuantitaKg(e.target.value)}
+                        required
+                        style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    />
+                </div>
+
+                {/* Sezione Caricamento Foto: Dal Computer + Preset + Anteprima Live */}
+                <div style={{ gridColumn: '1 / -1', backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px dashed #94a3b8' }}>
+                    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+
+                        {/* Anteprima Immagine */}
+                        <img
+                            src={fotoUrl}
+                            alt="Anteprima pianta"
+                            style={{ width: '90px', height: '90px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #2e7d32' }}
+                        />
+
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 'bold', color: '#1b5e20', marginBottom: '0.4rem' }}>
+                                📸 1. Carica una foto dal tuo Mac/PC:
+                            </label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileUpload}
+                                style={{ marginBottom: '0.8rem', fontSize: '0.85rem' }}
+                            />
+
+                            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold', color: '#475569', marginBottom: '0.3rem' }}>
+                                Oppure scegli una foto rapida / incolla URL:
+                            </label>
+                            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                {FOTO_PRESET.map((preset) => (
+                                    <button
+                                        key={preset.label}
+                                        type="button"
+                                        onClick={() => setFotoUrl(preset.url)}
+                                        style={{
+                                            padding: '0.25rem 0.6rem',
+                                            fontSize: '0.75rem',
+                                            borderRadius: '14px',
+                                            border: fotoUrl === preset.url ? '2px solid #1b5e20' : '1px solid #cbd5e1',
+                                            backgroundColor: fotoUrl === preset.url ? '#dcfce7' : '#fff',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {preset.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{ gridColumn: '1 / -1', textAlign: 'right' }}>
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        style={{
+                            padding: '0.65rem 1.5rem',
+                            backgroundColor: '#2e7d32',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        {submitting ? 'Salvataggio...' : '➕ Pubblica Pianta con Foto'}
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+};

@@ -19,12 +19,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                                                   onLogout
                                               }) => {
     const navBtnStyle = (tab: ActiveTab): React.CSSProperties => ({
-        padding: '0.55rem 1rem',
+        padding: '0.45rem 0.75rem',
         borderRadius: '6px',
         border: 'none',
         cursor: 'pointer',
         fontWeight: 'bold',
-        fontSize: '0.9rem',
+        fontSize: '0.85rem',
         backgroundColor: activeTab === tab ? '#ffffff' : 'rgba(255, 255, 255, 0.15)',
         color: activeTab === tab ? '#1b5e20' : '#ffffff'
     });
@@ -36,7 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             alignItems: 'center',
             flexWrap: 'wrap',
             gap: '1rem',
-            padding: '1rem 1.8rem',
+            padding: '0.9rem 1.2rem',
             background: 'linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%)',
             color: 'white',
             borderRadius: '12px',
